@@ -1,6 +1,34 @@
 <html>
     <head>
         <title>Keylet tools</title>
+<style>
+html
+{
+    font-family:monospace;
+}
+div
+{
+    font-size: 14pt; max-width:100vw; overflow-wrap:break-word;
+    border: 1px solid black;
+    padding: 0.5em;
+}
+button
+{
+    width: 10em;
+    font-size: 12pt;
+    color: blue;
+    margin-bottom: 0.5em;
+}
+h1
+{
+    font-family: sans-serif;
+    font-size: 14pt;
+}
+input[type="text"]
+{
+    width: 40em;
+}
+</style>
     </head>
     <body>
         <script>
@@ -18,7 +46,7 @@
                     hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
             }
 
-            function disp(typ, hex)
+            function disp(nam, typ, hex, raw)
             {
                 let carr = '';
 
@@ -32,13 +60,17 @@
                                 typ.substr(0, 2).toUpperCase() + 
                                 'U,0x' + typ.substr(2,2).toUpperCase() + 'U,' + carr + '}';
                         
+                document.getElementById('nam').innerText = nam;
+                document.getElementById('raw').innerText = raw.toUpperCase();
+
                 document.getElementById("out").innerHTML = 
                                 typ.toUpperCase() + ' : ' + 
-                                hex.toUpperCase() + '<br />' + 
-                                carr + '<br />';
+                                hex.toUpperCase();
+
+                document.getElementById('arr').innerText = carr;
             }
 
-            function out(parts, typ)
+            function out(nam, parts, typ)
             {
 
                 let hex = '';
@@ -48,18 +80,27 @@
                 {
                     if (typeof(parts[i]) == 'string')
                     {
-                        let ascii = parts[i].charCodeAt(0).toString(16);
-                        if (ascii.length == 1) ascii = '0' + ascii;
-                        if (i == 0 && typ === undefined)
+                        if (i == 0)
                         {
+                            let ascii = parts[i].charCodeAt(0).toString(16);
+                            if (ascii.length == 1) ascii = '0' + ascii;
                             ascii = '00' + ascii;
-                            typ = ascii;
+                            if (typ === undefined)
+                                typ = ascii;
+                            hex += ascii;
+                            continue;
                         }
-                        hex += ascii;
-                        continue;
+                        else
+                        {
+                            if (parts[i].length % 2 == 1)
+                                hex += '0' + parts[i];
+                            else
+                                hex += parts[i].toUpperCase();
+                            continue;
+                        }
                     }
 
-                    if (typeof(parts[i] == 'number'))
+                    if (typeof(parts[i]) == 'number')
                     {
                         let n = parts[i].toString(16);
                         if (n.length == 1) n = '0' + n;
@@ -82,12 +123,13 @@
 
                 }
 
-                console.log('hex', hex);
+                console.log('hex raw: ', hex);
+
                 if (crypto.subtle)
                 {
                     crypto.subtle.digest('SHA-512', hex2buf(hex) ).then(x=>
                     {
-                        disp(typ, buf2hex(x));
+                        disp(nam, typ, buf2hex(x), hex);
                     }).catch(x=>
                     {
                         document.getElementById('out').innerText = e;
@@ -96,24 +138,223 @@
                 }
                 else
                 {
-                    disp(typ, new jsSHA("SHA-512", "HEX").update(hex).getHash('HEX').substr(0, 64));
+                    disp(nam, typ, new jsSHA("SHA-512", "HEX").update(hex).getHash('HEX').substr(0, 64), hex);
                 }
 
             }
 
+            function hexValidate(elename, count)
+            {
+                try
+                {
+                    let content = document.getElementById(elename).value.toUpperCase().trim();
+                    if (!content.match(/^[A-F0-9]+$/) || (count && content.length != count))
+                    {
+                        document.getElementById(elename).style.background = 'pink';
+                        return false;
+                    }
+
+                    document.getElementById(elename).style.background = 'aquamarine';
+                    return true;
+                }
+                catch (e)
+                {
+                    console.log(e);
+                    document.getElementById(elename).style.background = 'pink';
+                    return false;
+                }
+            }
+
+
+            const xrpl_alphabet = 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz';
+            function accountToHex(r)
+            {
+                r = r.trim();
+                if (r == "") return false;
+
+                // catch case when hex is provided
+                if (r.charCodeAt(0) != 'r'.charCodeAt(0) && r.match(/^[a-fA-F0-9]+$/))
+                {
+                    r = r.toUpperCase();
+                    if (r.length % 2 == 1)
+                        r = '0' + r;
+                    if (r.length > 40)
+                        r = r.substr(0, 40);
+                    else if (r.length < 40)
+                        r = '0'.repeat(40 - r.length) + r;
+                    return r;
+                }
+                
+                try
+                {
+                    if (typeof(r) != 'string')
+                        return false
+
+                    let v = 0n
+                    let p = 1n
+                    for (let i = 0; i < r.length-1; ++i)
+                        p *= 58n;
+                    for (let i = 0; i < r.length; ++i)
+                    {
+                        let c = xrpl_alphabet.indexOf(r[i])
+                        if (c == -1)
+                            return false
+                        v += BigInt(c) * p
+                        p /= 58n
+                    }
+                    let hex = v.toString(16);
+                    if (hex.length % 2 == 1)
+                        hex = '0' + hex;
+                    if (hex.length == 40)
+                        return hex;
+                    if (hex.length > 40)
+                        return hex.substr(0,40);
+                    return '0'.repeat(40 - hex.length) + hex;
+                }
+                catch(e)
+                {
+                    return false
+                }
+            }
+            function accountValidate(elename)
+            {
+                try
+                {
+                    const ok = accountToHex(document.getElementById(elename).value + '') !== false;
+                    document.getElementById(elename).style.background = ok ? 'aquamarine' : 'pink';
+                    return ok;
+                } catch (e)
+                {
+                    document.getElementById(elename).style.background = 'pink';
+                    return false;
+                }
+            }
+
+            function intValidate(elename, n)
+            {
+                
+                try
+                {
+                    let content = document.getElementById(elename).value.trim();
+                    if (('' + content).match(/^[0-9]+$/))
+                    {
+                        if (n !== undefined && parseInt(''+content).toString(16).length > n)
+                        {
+                            document.getElementById(elename).style.background = 'pink';
+                            return false;
+                        }
+                        document.getElementById(elename).style.background = 'aquamarine';
+                        return true;
+                    }
+                } catch (e) {}
+                document.getElementById(elename).style.background = 'pink';
+                return false;
+            }
+
+            function intToHex(x, n)
+            {
+                console.log(x);
+                x = parseInt('' + x);
+                x = x.toString(16);
+                x = '0'.repeat(n - x.length) + x;
+                return x.toUpperCase();
+            }
         </script>
 
-        <h3>Keylets without parameters</h3>
-        <button onclick="out(['f'])">amendments</button><br/>
-        <button onclick="out(['F'], '0064')">emittedDir</button><br/>
-        <button onclick="out(['e'])">fees</button><br/>
-        <button onclick="out(['N'])">negativeUNL</button><br/>
-        <button onclick="out(['s'], '0068')">skip</button><br/>
+        <h1>Keylets without parameters</h1>
+        <button onclick="out('amendments', ['f'])">amendments</button>
+        <button onclick="out('emittedDir', ['F'], '0064')">emittedDir</button>
+        <button onclick="out('fees', ['e'])">fees</button>
+        <button onclick="out('negativeUNL', ['N'])">negativeUNL</button>
+        <button onclick="out('skip', ['s'], '0068')">skip</button>
+
+        <h1>Keylets with one parameter</h1>
+        <!--
+            getBookBase(Book const& book)
+getQualityNext(uint256 const& uBase)
+getQuality(uint256 const& uBase)
+account(AccountID const& id) noexcept
+child(uint256 const& key) noexcept
+skip(LedgerIndex ledger) noexcept
+signers(AccountID const& account) noexcept
+unchecked(uint256 const& key) noexcept
+ownerDir(AccountID const& id) noexcept
+enum class LedgerNameSpace : std::uint16_t {
+    ACCOUNT = 'a',
+    DIR_NODE = 'd',
+    TRUST_LINE = 'r',
+    OFFER = 'o',
+    OWNER_DIR = 'O',
+    BOOK_DIR = 'B',
+    SKIP_LIST = 's',
+    ESCROW = 'u',
+    AMENDMENTS = 'f',
+    FEE_SETTINGS = 'e',
+    TICKET = 'T',
+    SIGNER_LIST = 'S',
+    PAYMENT_CHANNEL = 'x',
+    CHECK = 'C',
+    DEPOSIT_PREAUTH = 'p',
+    NEGATIVE_UNL = 'N',
+    HOOK = 'H',
+    HOOK_STATE_DIR = 'J',
+    HOOK_STATE = 'v',
+    HOOK_DEFINITION = 'D',
+    EMITTED_TXN = 'E',
+    EMITTED_DIR = 'F',
+    NFTOKEN_OFFER = 'q',
+    NFTOKEN_BUY_OFFERS = 'h',
+    NFTOKEN_SELL_OFFERS = 'i',
+
+    // No longer used or supported. Left here to reserve the space
+    // to avoid accidental reuse.
+    CONTRACT [[deprecated]] = 'c',
+    GENERATOR [[deprecated]] = 'g',
+    NICKNAME [[deprecated]] = 'n',
+};
+        -->
+        <button onclick="hexValidate('emittedTxn', 64) &&
+            out('emittedTxn', ['E', ''+document.getElementById('emittedTxn').value])">emittedTxn</button>&nbsp;
+        <input type="text" id="emittedTxn" placeholder="uint256"><br/>
 
 
+        <button onclick="accountValidate('hook') &&
+            out('hook', ['H', accountToHex(document.getElementById('hook').value)])">hook</button>&nbsp;
+        <input type="text" id="hook" placeholder="account"><br/>
+
+        <button onclick="hexValidate('hookDefinition', 64) &&
+            out('hookDefinition', ['D', ''+document.getElementById('hookDefinition').value])">hookDefinition</button>&nbsp;
+        <input type="text" id="hookDefinition" placeholder="uint256"><br/>
+
+        <button onclick="accountValidate('account') &&
+            out('account', ['a', accountToHex(document.getElementById('account').value)])">account</button>&nbsp;
+        <input type="text" id="account" placeholder="account"><br/>
+        
+        <button onclick="intValidate('skip', 8) &&
+            out('skip', ['s', intToHex(document.getElementById('skip').value, 8)], '0068')">skip</button>&nbsp;
+        <input type="text" id="skip" placeholder="ledger index"><br/>
+
+        <button onclick="accountValidate('signers') &&
+            out('signers', ['S', accountToHex(document.getElementById('signers').value), intToHex(0, 8)])">signers</button>&nbsp;
+        <input type="text" id="signers" placeholder="account"><br/>
+        
+        <button onclick="accountValidate('ownerDir') &&
+            out('ownerDir', ['O', accountToHex(document.getElementById('ownerDir').value)], '0064')">ownerDir</button>&nbsp;
+        <input type="text" id="ownerDir" placeholder="account"><br/>
         <hr />
-        <div id="out" style="font-family:monospace; font-size: 14pt; max-width:100vw; overflow-wrap:break-word;"></div>
-
+        <h1>Name</h1>
+        <div id="nam"></div>
+        <br/>
+        <h1>Hashed content</h1>
+        <div id="raw"></div>
+        <br />
+        <h1>Keylet</h1>
+        <div id="out"></div>
+        <br />
+        <h1>C-Array</h1>
+        <div id="arr"></div>
+        
+        
 
 
                 <script>
@@ -121,3 +362,7 @@
 
                 </script>
 
+        <script defer>
+            out('amendments', ['f']);
+        </script>
+        
