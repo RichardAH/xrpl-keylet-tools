@@ -109,7 +109,7 @@ input[type="text"]
                 {
                     crypto.subtle.digest('SHA-512', hex2buf(hex) ).then(x=>
                     {
-                        disp(nam, typ, buf2hex(x), hex);
+                        disp(nam, typ, buf2hex(x).substr(0,64), hex);
                     }).catch(x=>
                     {
                         document.getElementById('out').innerText = e;
@@ -182,7 +182,7 @@ input[type="text"]
                 {
                     crypto.subtle.digest('SHA-512', hex2buf(hex) ).then(x=>
                     {
-                        disp(nam, typ, buf2hex(x), hex);
+                        disp(nam, typ, buf2hex(x).substr(0,64), hex);
                     }).catch(x=>
                     {
                         document.getElementById('out').innerText = e;
