@@ -144,6 +144,7 @@ input[type="text"]
                         }
                         else
                         {
+                            console.log('hex parts[' + i + ']: ', parts[i]);
                             if (parts[i].length % 2 == 1)
                                 hex += '0' + parts[i];
                             else
@@ -345,13 +346,18 @@ input[type="text"]
                 {
                     let hex = '000000000000000000000000';
         
-                    let ascii = [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2)];
-                    for (let i = 0; i < ascii.length; ++i)
+                    if (x == 'XRP')
+                        hex += '000000';
+                    else
                     {
-                        let a = ascii[i].toString(16);
-                        if (a.length == 1)
-                            a = '0' + ascii[i];
-                        hex += a;
+                        let ascii = [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2)];
+                        for (let i = 0; i < ascii.length; ++i)
+                        {
+                            let a = ascii[i].toString(16);
+                            if (a.length == 1)
+                                a = '0' + ascii[i];
+                            hex += a;
+                        }
                     }
 
                     hex += '0000000000';
@@ -401,6 +407,33 @@ input[type="text"]
             <input type="text" id="account" placeholder="account">
         </div>
         
+        <div>
+        <button onclick="
+            currencyValidate('book_currency') && 
+            (
+                document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP' ||
+                accountValidate('book_account')
+            ) &&
+            currencyValidate('book_currency2') && 
+            (
+                document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP' ||
+                accountValidate('book_account2')
+            ) &&
+            out('book', ['B',
+                document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP' 
+                    ? '0'.repeat(40)
+                    : accountToHex(document.getElementById('book_account').value), 
+                currencyToHex(document.getElementById('book_currency').value),
+                document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP'
+                    ? '0'.repeat(40)
+                    : accountToHex(document.getElementById('book_account2').value), 
+                currencyToHex(document.getElementById('book_currency2').value)], '0064'
+            )">book</button>&nbsp;
+        <input type="text" id="book_account" placeholder="issuer 1">
+        <input type="text" id="book_currency" placeholder="currency 1" style="width:12em;">
+        <input type="text" id="book_account2" placeholder="issuer 2">
+        <input type="text" id="book_currency2" placeholder="currency 2" style="width:12em;">
+        </div>
 
         <div>
         <button onclick="
@@ -475,6 +508,21 @@ input[type="text"]
         <input type="text" id="hookDefinition" placeholder="uint256">
         </div>
         
+        <div>
+        <button onclick="
+                accountValidate('hookState_account') &&
+                hexValidate('hookState_key', 64) &&
+                hexValidate('hookState_namespace', 64) &&
+            out('hookState', 
+            ['v', 
+                accountToHex(document.getElementById('hookState_account').value), 
+                '' + document.getElementById('hookState_key').value,
+                '' + document.getElementById('hookState_namespace').value
+            ])">hookState</button>&nbsp;
+        <input type="text" id="hookState_account" placeholder="account">
+        <input type="text" id="hookState_key" placeholder="uint256 (key)">
+        <input type="text" id="hookState_namespace" placeholder="uint256 (namespace)">
+        </div>
         
         <div>
         <button onclick="
@@ -654,6 +702,18 @@ input[type="text"]
         </div>
         
 
+        <div>
+        <button onclick="
+            accountValidate('ticket_account') &&
+            intValidate('ticket_seq', 8) &&
+            out('ticket', 
+            ['T', 
+                accountToHex(document.getElementById('ticket_account').value), 
+                intToHex(document.getElementById('ticket_seq').value, 8)
+            ])">ticket</button>&nbsp;
+        <input type="text" id="ticket_account" placeholder="account">
+        <input type="text" id="ticket_seq" placeholder="uint32 (seq)">
+        </div>
 
 
 
