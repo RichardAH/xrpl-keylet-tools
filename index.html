@@ -9,15 +9,21 @@ html
 div
 {
     font-size: 12pt; max-width:100vw; overflow-wrap:break-word;
+    padding-top: 0.1em;
+    padding-bottom:0.1em;
+}
+.output
+{
     border: 1px solid black;
-    padding: 0.5em;
+    background: white !important;
+    padding: 0.25em;
 }
 button
 {
-    width: 10em;
+    width: 9em;
     font-size: 12pt;
     color: blue;
-    margin-bottom: 0.5em;
+    margin: 0.25em;
 }
 h1
 {
@@ -26,7 +32,10 @@ h1
 }
 input[type="text"]
 {
-    width: 40em;
+    width: 30em;
+    background: rgba(255,255,255,0);
+    border: 1px solid grey;
+    border-radius: 3px;
 }
 </style>
     </head>
@@ -366,26 +375,34 @@ input[type="text"]
         </script>
 
         <h1 id="nam">Content</h1>
-        <div id="raw"></div>
-        <br />
+        <div id="raw" class="output"></div>
+        
         <h1>Keylet</h1>
-        <div id="out"></div>
-        <br />
+        <div id="out" class="output"></div>
+        
         <h1>C-Array</h1>
-        <div id="arr"></div>
+        <div id="arr" class="output"></div>
+        
+
         <br />
 
+        <div>
         <button onclick="out('amendments', ['f'])">amendments</button>
         <button onclick="out('emittedDir', ['F'], '0064')">emittedDir</button>
         <button onclick="out('fees', ['e'])">fees</button>
         <button onclick="out('negativeUNL', ['N'])">negativeUNL</button>
         <button onclick="out('skip', ['s'], '0068')">skip</button>
-        <br/>
+        </div>
         
-        <button onclick="accountValidate('account') &&
-            out('account', ['a', accountToHex(document.getElementById('account').value)])">account</button>&nbsp;
-        <input type="text" id="account" placeholder="account"><br/>
         
+        <div>
+            <button onclick="accountValidate('account') &&
+                out('account', ['a', accountToHex(document.getElementById('account').value)])">account</button>&nbsp;
+            <input type="text" id="account" placeholder="account">
+        </div>
+        
+
+        <div>
         <button onclick="
             accountValidate('check_account') &&
             (
@@ -401,9 +418,10 @@ input[type="text"]
             ])">check</button>&nbsp;
         <input type="text" id="check_account" placeholder="account">
         <input type="text" id="check_seq" placeholder="uint256 or uint32 (seq)">
-        <br/>
+        </div>
+        
 
-
+        <div>
         <button onclick="
             accountValidate('depositPreauth_account') &&
             accountValidate('depositPreauth_account2') &&
@@ -414,13 +432,18 @@ input[type="text"]
             ])">depositPreauth</button>&nbsp;
         <input type="text" id="depositPreauth_account" placeholder="account (owner)">
         <input type="text" id="depositPreauth_account2" placeholder="account (authorized)">
-        <br/>
-
-        <button onclick="hexValidate('emittedTxn', 64) &&
-            out('emittedTxn', ['E', ''+document.getElementById('emittedTxn').value])">emittedTxn</button>&nbsp;
-        <input type="text" id="emittedTxn" placeholder="uint256"><br/>
+        </div>
         
 
+        <div>
+        <button onclick="hexValidate('emittedTxn', 64) &&
+            out('emittedTxn', ['E', ''+document.getElementById('emittedTxn').value])">emittedTxn</button>&nbsp;
+        <input type="text" id="emittedTxn" placeholder="uint256">
+        </div>
+        
+        
+
+        <div>
         <button onclick="
             accountValidate('escrow_account') &&
             (
@@ -436,17 +459,24 @@ input[type="text"]
             ])">escrow</button>&nbsp;
         <input type="text" id="escrow_account" placeholder="account">
         <input type="text" id="escrow_seq" placeholder="uint256 or uint32 (seq)">
-        <br/>
+        </div>
+        
 
-
+        <div>
         <button onclick="accountValidate('hook') &&
             out('hook', ['H', accountToHex(document.getElementById('hook').value)])">hook</button>&nbsp;
-        <input type="text" id="hook" placeholder="account"><br/>
+        <input type="text" id="hook" placeholder="account">
+        </div>
+        
 
+        <div>
         <button onclick="hexValidate('hookDefinition', 64) &&
             out('hookDefinition', ['D', ''+document.getElementById('hookDefinition').value])">hookDefinition</button>&nbsp;
-        <input type="text" id="hookDefinition" placeholder="uint256"><br/>
+        <input type="text" id="hookDefinition" placeholder="uint256">
+        </div>
         
+        
+        <div>
         <button onclick="
                 accountValidate('hookStateDir_account') &&
                 hexValidate('hookStateDir_namespace', 64) &&
@@ -457,8 +487,10 @@ input[type="text"]
             ], '0064')">hookStateDir</button>&nbsp;
         <input type="text" id="hookStateDir_account" placeholder="account">
         <input type="text" id="hookStateDir_namespace" placeholder="uint256 (namespace)">
-        <br/>
+        </div>
+        
 
+        <div>
         <button onclick="
             accountValidate('line_account') &&
             accountValidate('line_account2') &&
@@ -470,13 +502,18 @@ input[type="text"]
         <input type="text" id="line_account" placeholder="account (party A)">
         <input type="text" id="line_account2" placeholder="account (party B)">
         <input type="text" id="line_currency" placeholder="currency" style="width:12em;">
-        <br/>
+        </div>
+        
 
+        <div>
         <button onclick="accountValidate('nftBuys') &&
             out('nftBuys', ['h', accountToHex(document.getElementById('nftBuys').value)], '0064')">nftBuys</button>&nbsp;
-        <input type="text" id="nftBuys" placeholder="account"><br/>
+        <input type="text" id="nftBuys" placeholder="account">
+        </div>
+        
 
 
+        <div>
         <button onclick="
                 accountValidate('nftPage_account') &&
                 hexValidate('nftPage_token', 64) &&
@@ -484,21 +521,32 @@ input[type="text"]
             ''+document.getElementById('nftPage_token').value)">nftPage</button>&nbsp;
         <input type="text" id="nftPage_account" placeholder="account">
         <input type="text" id="nftPage_token" placeholder="uint256 (token)">
-        <br />
+        </div>
+        
 
 
+        <div>
         <button onclick="accountValidate('nftPageMax') &&
             out_nftpage('nftPageMax', accountToHex(document.getElementById('nftPageMax').value), 'F'.repeat(64))">nftPageMax</button>&nbsp;
-        <input type="text" id="nftPageMax" placeholder="account"><br/>
+        <input type="text" id="nftPageMax" placeholder="account">
+        </div>
+        
 
+        <div>
         <button onclick="accountValidate('nftPageMin') &&
             out_nftpage('nftPageMin', accountToHex(document.getElementById('nftPageMin').value), '0'.repeat(64))">nftPageMin</button>&nbsp;
-        <input type="text" id="nftPageMin" placeholder="account"><br/>
+        <input type="text" id="nftPageMin" placeholder="account">
+        </div>
+        
 
+        <div>
         <button onclick="accountValidate('nftSells') &&
             out('nftSells', ['i', accountToHex(document.getElementById('nftSells').value)], '0064')">nftSells</button>&nbsp;
-        <input type="text" id="nftSells" placeholder="account"><br/>
+        <input type="text" id="nftSells" placeholder="account">
+        </div>
+        
 
+        <div>
         <button onclick="
             accountValidate('nftoffer_account') &&
             (
@@ -514,9 +562,10 @@ input[type="text"]
             ])">nftoffer</button>&nbsp;
         <input type="text" id="nftoffer_account" placeholder="account">
         <input type="text" id="nftoffer_seq" placeholder="uint256 or uint32 (seq)">
-        <br/>
+        </div>
+        
 
-
+        <div>
         <button onclick="
             accountValidate('offer_account') &&
             (
@@ -532,13 +581,18 @@ input[type="text"]
             ])">offer</button>&nbsp;
         <input type="text" id="offer_account" placeholder="account">
         <input type="text" id="offer_seq" placeholder="uint256 or uint32 (seq)">
-        <br/>
+        </div>
+        
 
         
+        <div>
         <button onclick="accountValidate('ownerDir') &&
             out('ownerDir', ['O', accountToHex(document.getElementById('ownerDir').value)], '0064')">ownerDir</button>&nbsp;
-        <input type="text" id="ownerDir" placeholder="account"><br/>
+        <input type="text" id="ownerDir" placeholder="account">
+        </div>
+        
 
+        <div>
         <button onclick="
                 hexValidate('page_key', 64) &&
                 intValidate('page_q', 16) &&
@@ -549,8 +603,10 @@ input[type="text"]
             )">page</button>&nbsp;
         <input type="text" id="page_key" placeholder="uint256 (key)">
         <input type="text" id="page_q" placeholder="uint64 (index)">
-        <br/>
+        </div>
         
+        
+        <div>
         <button onclick="
             accountValidate('payChan_account') &&
             accountValidate('payChan_account2') &&
@@ -569,8 +625,10 @@ input[type="text"]
         <input type="text" id="payChan_account" placeholder="account (source)">
         <input type="text" id="payChan_account2" placeholder="account (destination)">
         <input type="text" id="payChan_seq" placeholder="uint256 or uint32 (seq)" style="width:12em;">
-        <br/>
+        </div>
+        
 
+        <div>
         <button onclick="
                 hexValidate('quality_key', 64) &&
                 intValidate('quality_q', 16) &&
@@ -578,18 +636,23 @@ input[type="text"]
                 intToHex('' + document.getElementById('quality_q').value, 16))">quality</button>&nbsp;
         <input type="text" id="quality_key" placeholder="uint256 (key)">
         <input type="text" id="quality_q" placeholder="uint64 (q)">
-        <br/>
+        </div>
         
         
+        <div>
         <button onclick="accountValidate('signers') &&
             out('signers', ['S', accountToHex(document.getElementById('signers').value), intToHex(0, 8)])">signers</button>&nbsp;
-        <input type="text" id="signers" placeholder="account"><br/>
+        <input type="text" id="signers" placeholder="account">
+        </div>
+        
 
 
-
+        <div>
         <button onclick="intValidate('skip', 8) &&
             out('skip', ['s', intToHex(document.getElementById('skip').value, 8)], '0068')">skip</button>&nbsp;
-        <input type="text" id="skip" placeholder="ledger index"><br/>
+        <input type="text" id="skip" placeholder="ledger index">
+        </div>
+        
 
 
 
