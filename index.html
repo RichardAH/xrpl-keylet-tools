@@ -269,6 +269,18 @@ input[type="text"]
                     return false
                 }
             }
+
+            function uriToHex(uri)
+            {
+                let output = '';
+                for (let n in uri)
+                {
+                    let digit = uri.charCodeAt(n).toString(16).toUpperCase();
+                    output += (digit.length == 1 ? '0' : '') + digit
+                }
+                return output;
+            }
+            
             function accountValidate(elename)
             {
                 try
@@ -281,6 +293,18 @@ input[type="text"]
                     document.getElementById(elename).style.background = 'pink';
                     return false;
                 }
+            }
+
+            function uriValidate(elename)
+            {
+                const uri = (document.getElementById(elename).value + '').trim();
+                if (uri.length < 1 || uri.length > 256)
+                {
+                    document.getElementById(elename).style.background = 'pink';
+                    return false;
+                }
+                document.getElementById(elename).style.background = 'aquamarine';
+                return uri;
             }
 
             // n = desired length (may be less), m = other possible length (more than n)
@@ -715,6 +739,18 @@ input[type="text"]
         <input type="text" id="ticket_seq" placeholder="uint32 (seq)">
         </div>
 
+        <div>
+        <button onclick="
+            accountValidate('uritoken_account') &&
+            uriValidate('uritoken_uri') &&
+            out('uritoken',
+            ['U',
+                accountToHex(document.getElementById('uritoken_account').value),
+                uriToHex(uriValidate('uritoken_uri')),
+            ])">uritoken</button>&nbsp;
+        <input type="text" id="uritoken_account" placeholder="issuer">
+        <input type="text" id="uritoken_uri" placeholder="uri">
+        </div>
 
 
 
