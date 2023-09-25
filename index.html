@@ -126,7 +126,6 @@ input[type="text"]
             {
 
                 let hex = '';
-                
 
                 for (let i = 0; i < parts.length; ++i)
                 {
@@ -421,6 +420,7 @@ input[type="text"]
         <button onclick="out('emittedDir', ['F'], '0064')">emittedDir</button>
         <button onclick="out('fees', ['e'], '0073')">fees</button>
         <button onclick="out('negativeUNL', ['N'])">negativeUNL</button>
+        <button onclick="out('UNLReport', ['R'])">UNLReport</button>
         <button onclick="out('skip', ['s'], '0068')">skip</button>
         </div>
         
@@ -446,12 +446,17 @@ input[type="text"]
             out('book', ['B',
                 document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP' 
                     ? '0'.repeat(40)
-                    : accountToHex(document.getElementById('book_account').value), 
-                currencyToHex(document.getElementById('book_currency').value),
+                    : currencyToHex(document.getElementById('book_currency').value),
                 document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP'
                     ? '0'.repeat(40)
-                    : accountToHex(document.getElementById('book_account2').value), 
-                currencyToHex(document.getElementById('book_currency2').value)], '0064'
+                    : currencyToHex(document.getElementById('book_currency2').value),
+                document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP'
+                    ? '0'.repeat(40)
+                    : accountToHex(document.getElementById('book_account').value),
+                document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP'
+                    ? '0'.repeat(40)
+                    : accountToHex(document.getElementById('book_account2').value),
+                ], '0064'
             )">book</button>&nbsp;
         <input type="text" id="book_account" placeholder="issuer 1">
         <input type="text" id="book_currency" placeholder="currency 1" style="width:12em;">
