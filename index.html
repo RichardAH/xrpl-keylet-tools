@@ -503,7 +503,11 @@ input[type="text"]
         <input type="text" id="emittedTxn" placeholder="uint256">
         </div>
         
-        
+        <div>
+            <button onclick="hexValidate('importVLSeq', 66) &&
+                out('importVLSeq', ['I', ''+document.getElementById('importVLSeq').value])">importVLSeq</button>&nbsp;
+            <input type="text" id="importVLSeq" placeholder="publicKey">
+            </div>
 
         <div>
         <button onclick="
