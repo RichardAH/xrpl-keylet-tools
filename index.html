@@ -1,770 +1,1295 @@
-<html>
-    <head>
-        <title>Keylet tools</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Keylet tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Martian+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-html
-{
-    font-family:monospace;
+:root {
+  --paper: #ECEFED; --sheet: #FAFBFA; --ink: #16202A; --muted: #5A6772; --rule: #CDD5D1; --field: #FFFFFF;
+  --err: #B3261E; --err-bg: #FBEAE8;
+  --xrpl: #2850C8; --xrpl-soft: #E2E8FA; --xahau: #0D7A69; --xahau-soft: #DAEFEA;
+  --s-ns: #DDD7F6; --s-acct: #CDE2F6; --s-acct2: #F5E0C3; --s-seq: #D6ECCB; --s-cur: #F5D4DB; --s-cur2: #EAD8F1;
+  --s-u256: #CFE8E5; --s-u256b: #ECE5CB; --s-blob: #F2DCEF; --s-mpt: #D6DFF1; --s-mpt2: #E4EBD2; --s-pad: #E2E6E4;
+  --sans: "Instrument Sans", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  color-scheme: light;
 }
-div
-{
-    font-size: 12pt; max-width:100vw; overflow-wrap:break-word;
-    padding-top: 0.1em;
-    padding-bottom:0.1em;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101417; --sheet: #172024; --ink: #E1E8EA; --muted: #92A0A8; --rule: #2A363B; --field: #0F1619;
+    --err: #FF8A80; --err-bg: #3A1D1B;
+    --xrpl: #84A0FF; --xrpl-soft: #1D2747; --xahau: #4CC7B1; --xahau-soft: #143832;
+    --s-ns: #332D57; --s-acct: #1F3A57; --s-acct2: #4A3A1F; --s-seq: #263F22; --s-cur: #4C2630; --s-cur2: #3C2948;
+    --s-u256: #1D3F3C; --s-u256b: #403A1E; --s-blob: #47263F; --s-mpt: #24304B; --s-mpt2: #343F23; --s-pad: #263034;
+    color-scheme: dark;
+  }
 }
-.output
-{
-    border: 1px solid black;
-    background: white !important;
-    padding: 0.25em;
+:root[data-theme="dark"] {
+  --paper: #101417; --sheet: #172024; --ink: #E1E8EA; --muted: #92A0A8; --rule: #2A363B; --field: #0F1619;
+  --err: #FF8A80; --err-bg: #3A1D1B;
+  --xrpl: #84A0FF; --xrpl-soft: #1D2747; --xahau: #4CC7B1; --xahau-soft: #143832;
+  --s-ns: #332D57; --s-acct: #1F3A57; --s-acct2: #4A3A1F; --s-seq: #263F22; --s-cur: #4C2630; --s-cur2: #3C2948;
+  --s-u256: #1D3F3C; --s-u256b: #403A1E; --s-blob: #47263F; --s-mpt: #24304B; --s-mpt2: #343F23; --s-pad: #263034;
+  color-scheme: dark;
 }
-button
-{
-    width: 9em;
-    font-size: 12pt;
-    color: blue;
-    margin: 0.25em;
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  --accent: var(--xrpl); --accent-soft: var(--xrpl-soft);
 }
-h1
-{
-    font-family: sans-serif;
-    font-size: 14pt;
+body.xahau { --accent: var(--xahau); --accent-soft: var(--xahau-soft); }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+code, .mono { font-family: var(--mono); font-size: 0.8em; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 56px; }
+header.top { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 24px; margin-bottom: 24px; }
+h1 { margin: 0; font-size: 1.9rem; line-height: 1.1; font-weight: 700; letter-spacing: -0.02em; }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+
+.chain { display: inline-flex; padding: 3px; border-radius: 10px; background: var(--sheet); border: 1px solid var(--rule); }
+.chain button {
+  border: 0; background: transparent; padding: 7px 18px; border-radius: 7px; cursor: pointer;
+  font-weight: 600; color: var(--muted);
 }
-input[type="text"]
-{
-    width: 30em;
-    background: rgba(255,255,255,0);
-    border: 1px solid grey;
-    border-radius: 3px;
+.chain button[aria-pressed="true"] { background: var(--accent); color: var(--sheet); }
+
+.layout { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 20px; align-items: start; }
+aside {
+  background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 12px;
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); max-height: calc(100vh - 32px); overflow: auto;
 }
+.search {
+  width: 100%; padding: 8px 10px; border: 1px solid var(--rule); border-radius: 8px; background: var(--field);
+  margin-bottom: 6px;
+}
+aside h3 { margin: 14px 8px 4px; font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+aside ul { list-style: none; margin: 0; padding: 0; }
+aside li button {
+  width: 100%; display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  text-align: left; border: 0; background: transparent; padding: 5px 8px; border-radius: 6px; cursor: pointer;
+}
+aside li button:hover { background: var(--accent-soft); }
+aside li button[aria-current="true"] { background: var(--accent); color: var(--sheet); }
+aside li button[aria-current="true"] .ns { color: inherit; opacity: 0.8; }
+.ns { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+.empty-list { padding: 8px; color: var(--muted); }
+
+main { min-width: 0; }
+.panel { background: var(--sheet); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 24px; }
+.panel + .panel { margin-top: 16px; }
+.title-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+h2 { margin: 0; font-size: 1.45rem; line-height: 1.2; letter-spacing: -0.01em; }
+.tag { font-size: 0.78rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--s-u256b); }
+.sig { margin: 8px 0 0; color: var(--muted); overflow-wrap: anywhere; }
+.blurb { margin: 10px 0 0; max-width: 68ch; }
+
+form { margin-top: 18px; display: grid; gap: 14px; }
+.field label, .field .lbl { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
+.field .opt { font-weight: 400; color: var(--muted); }
+.inp {
+  width: 100%; padding: 9px 11px; border: 1px solid var(--rule); border-radius: 8px; background: var(--field);
+  font-family: var(--mono); font-size: 0.8rem;
+}
+.inp::placeholder { font-family: var(--sans); font-size: 0.9rem; color: var(--muted); opacity: 0.8; }
+.inp:disabled { opacity: 0.45; }
+.inp[aria-invalid="true"] { border-color: var(--err); background: var(--err-bg); }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 8px; }
+.blobrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.seg-toggle { display: inline-flex; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.seg-toggle button { border: 0; background: var(--field); padding: 6px 10px; cursor: pointer; font-size: 0.85rem; }
+.seg-toggle button[aria-pressed="true"] { background: var(--accent-soft); font-weight: 600; }
+.err { margin: 4px 0 0; color: var(--err); font-size: 0.85rem; }
+.err:empty { display: none; }
+.cred { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+.linkish {
+  border: 1px solid var(--rule); background: var(--field); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.85rem;
+}
+.linkish:hover { border-color: var(--accent); }
+
+/* Result */
+.result h3 { margin: 0 0 8px; font-size: 1rem; }
+.status { margin: 0; color: var(--muted); }
+.keyline { display: flex; align-items: start; gap: 12px; justify-content: space-between; }
+.key {
+  font-family: var(--mono); font-size: 1.02rem; line-height: 1.7; font-weight: 500;
+  display: flex; flex-wrap: wrap; column-gap: 0.6em; min-width: 0;
+}
+.key span.k { white-space: nowrap; }
+.key span.c { border-radius: 3px; }
+.copy {
+  flex: none; border: 1px solid var(--rule); background: var(--field); border-radius: 8px; padding: 5px 12px;
+  cursor: pointer; font-size: 0.85rem; font-weight: 600;
+}
+.copy:hover { border-color: var(--accent); }
+.copy.done { background: var(--accent); color: var(--sheet); border-color: var(--accent); }
+.note { margin: 6px 0 0; color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+
+dl.facts { margin: 20px 0 0; display: grid; grid-template-columns: max-content minmax(0, 1fr) auto; gap: 10px 16px; align-items: start; }
+dl.facts dt { font-weight: 600; font-size: 0.9rem; }
+dl.facts dd { margin: 0; font-family: var(--mono); font-size: 0.76rem; overflow-wrap: anywhere; line-height: 1.6; }
+dl.facts .copy { padding: 3px 10px; font-size: 0.8rem; }
+
+/* Preimage band: the visual centre of the page */
+.pre-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 26px; }
+.pre-head p { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.band { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.seg { border-radius: 8px; padding: 6px 10px 8px; min-width: 0; max-width: 100%; background: var(--s-pad); }
+.seg .sl { display: block; font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seg .sl small { font-weight: 400; color: var(--muted); }
+.seg .sh { display: block; font-family: var(--mono); font-size: 0.74rem; word-break: break-all; }
+[data-role="ns"] { background: var(--s-ns); } [data-role="AccountID"] { background: var(--s-acct); }
+[data-role="AccountID2"] { background: var(--s-acct2); } [data-role="Sequence"] { background: var(--s-seq); }
+[data-role="Currency"] { background: var(--s-cur); } [data-role="Currency2"] { background: var(--s-cur2); }
+[data-role="uint256"] { background: var(--s-u256); } [data-role="uint256b"] { background: var(--s-u256b); }
+[data-role="blob"] { background: var(--s-blob); } [data-role="mpt"] { background: var(--s-mpt); }
+[data-role="mpt2"] { background: var(--s-mpt2); } [data-role="pad"] { background: var(--s-pad); }
+.arrow { margin: 10px 0 0; font-size: 0.9rem; color: var(--muted); }
+
+footer { margin-top: 28px; color: var(--muted); font-size: 0.85rem; max-width: 80ch; }
+footer p { margin: 0 0 6px; }
+
+@media (max-width: 820px) {
+  .wrap { padding: 20px 14px 40px; }
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  aside { position: static; max-height: 300px; }
+  .panel { padding: 18px 16px; }
+  .pair, .cred { grid-template-columns: minmax(0, 1fr); }
+  dl.facts { grid-template-columns: minmax(0, 1fr) auto; }
+  dl.facts dt { grid-column: 1 / -1; margin-bottom: -6px; }
+  .key { font-size: 0.86rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
-    </head>
-    <body>
-        <script>
-
-            function buf2hex(buffer)
-            {
-              return [...new Uint8Array(buffer)]
-                  .map(x => x.toString(16).padStart(2, '0'))
-                  .join('');
-            }
-
-            function hex2buf(hexString)
-            {
-                return Uint8Array.from(
-                    hexString.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-            }
-
-            function disp(nam, typ, hex, raw)
-            {
-                let carr = '';
-
-                for (let i = 0; i < hex.length; i += 2)
-                {
-                    if (carr != '') carr += ',';
-                    carr += '0x' + hex.substr(i, 2).toUpperCase() + 'U';
-                }
-
-                carr = '{' + '0x' + 
-                                typ.substr(0, 2).toUpperCase() + 
-                                'U,0x' + typ.substr(2,2).toUpperCase() + 'U,' + carr + '}';
-                        
-                            document.getElementById('nam').innerText = "Raw Content { " + nam + " }";
-                document.getElementById('raw').innerText = raw.toUpperCase();
-
-                document.getElementById("out").innerHTML = 
-                                typ.toUpperCase() + ' : ' + 
-                                hex.toUpperCase();
-
-                document.getElementById('arr').innerText = carr;
-            }
-
-            function out_nftpage(nam, acc, token)
-            {
-                let content = acc + token.substr(40, 64);
-                disp(nam, '0050', content, content);
-            }
-
-            function out_quality(key, q)
-            {
-                key = key.trim();
-                key = key.toUpperCase();
-                key = '0'.repeat(64 - key.length) + key;
-                key = key.substr(0, 48) + q;
-                disp('quality', '0064', key, key);
-            }
-
-            function out_line(acc1, acc2, cur)
-            {
-                let accs =
-                    (BigInt('0x' + acc1) < BigInt('0x' + acc2))
-                    ? [acc1, acc2]
-                    : [acc2, acc1];
-
-                let hex = '0072' + accs[0] + accs[1] + cur;
-                let nam = 'line';
-                let typ = '0072';
-
-                if (crypto.subtle)
-                {
-                    crypto.subtle.digest('SHA-512', hex2buf(hex) ).then(x=>
-                    {
-                        disp(nam, typ, buf2hex(x).substr(0,64), hex);
-                    }).catch(x=>
-                    {
-                        document.getElementById('out').innerText = e;
-                    });
-
-                }
-                else
-                {
-                    disp(nam, typ, new jsSHA("SHA-512", "HEX").update(hex).getHash('HEX').substr(0, 64), hex);
-                }
-            }
-
-            function out(nam, parts, typ)
-            {
-
-                let hex = '';
-
-                for (let i = 0; i < parts.length; ++i)
-                {
-                    if (typeof(parts[i]) == 'string')
-                    {
-                        if (i == 0)
-                        {
-                            let ascii = parts[i].charCodeAt(0).toString(16);
-                            if (ascii.length == 1) ascii = '0' + ascii;
-                            ascii = '00' + ascii;
-                            if (typ === undefined)
-                                typ = ascii;
-                            hex += ascii;
-                            continue;
-                        }
-                        else
-                        {
-                            console.log('hex parts[' + i + ']: ', parts[i]);
-                            if (parts[i].length % 2 == 1)
-                                hex += '0' + parts[i];
-                            else
-                                hex += parts[i].toUpperCase();
-                            continue;
-                        }
-                    }
-
-                    if (typeof(parts[i]) == 'number')
-                    {
-                        let n = parts[i].toString(16);
-                        if (n.length == 1) n = '0' + n;
-                        hex += n;
-                        continue;
-                    }
-
-                    if (typeof(parts[i] == 'object'))
-                    {
-                        for (let j = 0; j < parts[i].length; ++j)
-                        {
-                            let n = parts[i][j].toString(16);
-                            if (n.length == 1) n = '0' + n;
-                            hex += n;
-                        }
-                        continue;
-                    }
-
-                    console.log("error! unknown type " + typeof(parts[i]));
-
-                }
-
-                console.log('hex raw: ', hex);
-
-                if (crypto.subtle)
-                {
-                    crypto.subtle.digest('SHA-512', hex2buf(hex) ).then(x=>
-                    {
-                        disp(nam, typ, buf2hex(x).substr(0,64), hex);
-                    }).catch(x=>
-                    {
-                        document.getElementById('out').innerText = e;
-                    });
-
-                }
-                else
-                {
-                    disp(nam, typ, new jsSHA("SHA-512", "HEX").update(hex).getHash('HEX').substr(0, 64), hex);
-                }
-
-            }
-
-            function hexValidate(elename, count)
-            {
-                try
-                {
-                    let content = document.getElementById(elename).value.toUpperCase().trim();
-                    if (!content.match(/^[A-F0-9]+$/) || (count && content.length != count))
-                    {
-                        document.getElementById(elename).style.background = 'pink';
-                        return false;
-                    }
-
-                    document.getElementById(elename).style.background = 'aquamarine';
-                    return true;
-                }
-                catch (e)
-                {
-                    console.log(e);
-                    document.getElementById(elename).style.background = 'pink';
-                    return false;
-                }
-            }
-
-
-            const xrpl_alphabet = 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz';
-            function accountToHex(r)
-            {
-                r = r.trim();
-                if (r == "") return false;
-
-                // catch case when hex is provided
-                if (r.charCodeAt(0) != 'r'.charCodeAt(0) && r.match(/^[a-fA-F0-9]+$/))
-                {
-                    r = r.toUpperCase();
-                    if (r.length % 2 == 1)
-                        r = '0' + r;
-                    if (r.length > 40)
-                        r = r.substr(0, 40);
-                    else if (r.length < 40)
-                        r = '0'.repeat(40 - r.length) + r;
-                    return r;
-                }
-                
-                try
-                {
-                    if (typeof(r) != 'string')
-                        return false
-
-                    let v = 0n
-                    let p = 1n
-                    for (let i = 0; i < r.length-1; ++i)
-                        p *= 58n;
-                    for (let i = 0; i < r.length; ++i)
-                    {
-                        let c = xrpl_alphabet.indexOf(r[i])
-                        if (c == -1)
-                            return false
-                        v += BigInt(c) * p
-                        p /= 58n
-                    }
-                    let hex = v.toString(16);
-                    if (hex.length % 2 == 1)
-                        hex = '0' + hex;
-                    if (hex.length == 40)
-                        return hex;
-                    if (hex.length > 40)
-                        return hex.substr(0,40);
-                    return '0'.repeat(40 - hex.length) + hex;
-                }
-                catch(e)
-                {
-                    return false
-                }
-            }
-
-            function uriToHex(uri)
-            {
-                let output = '';
-                for (let n in uri)
-                {
-                    let digit = uri.charCodeAt(n).toString(16).toUpperCase();
-                    output += (digit.length == 1 ? '0' : '') + digit
-                }
-                return output;
-            }
-            
-            function accountValidate(elename)
-            {
-                try
-                {
-                    const ok = accountToHex(document.getElementById(elename).value + '') !== false;
-                    document.getElementById(elename).style.background = ok ? 'aquamarine' : 'pink';
-                    return ok;
-                } catch (e)
-                {
-                    document.getElementById(elename).style.background = 'pink';
-                    return false;
-                }
-            }
-
-            function uriValidate(elename)
-            {
-                const uri = (document.getElementById(elename).value + '').trim();
-                if (uri.length < 1 || uri.length > 256)
-                {
-                    document.getElementById(elename).style.background = 'pink';
-                    return false;
-                }
-                document.getElementById(elename).style.background = 'aquamarine';
-                return uri;
-            }
-
-            // n = desired length (may be less), m = other possible length (more than n)
-            // length in hex nibbles
-            function intValidate(elename, n, m)
-            {
-                
-                try
-                {
-                    let content = document.getElementById(elename).value.trim();
-                    if (('' + content).match(/^[0-9]+$/))
-                    {
-                        let ashex = parseInt(''+content).toString(16);
-                        if (n !== undefined && ashex.length > n)
-                        {
-                            if (m != undefined && ashex.length == m || ashex.length == m-1)
-                            {
-                                // pass
-                            }
-                            else
-                            {
-                                document.getElementById(elename).style.background = 'pink';
-                                return false;
-                            }
-                        }
-                        document.getElementById(elename).style.background = 'aquamarine';
-                        return true;
-                    }
-                } catch (e) {}
-                document.getElementById(elename).style.background = 'pink';
-                return false;
-            }
-
-            function currencyValidate(elename)
-            {
-                try
-                {
-                    let content = document.getElementById(elename).value.trim().toUpperCase();
-
-                    if (content.length == 3)
-                    {
-                        // pass
-                    }
-                    else if (!(('' + content).match(/^[A-F0-9]{40}$/)))
-                    {
-                        document.getElementById(elename).style.background = 'pink';
-                        return false;
-                    }
-                } catch (e)
-                {
-                    document.getElementById(elename).style.background = 'pink';
-                    return false;
-                }
-
-                document.getElementById(elename).style.background = 'aquamarine';
-                return true;
-            }
-
-            function currencyToHex(x)
-            {
-                x = x.trim().toUpperCase();
-                if (x.length == 3)
-                {
-                    let hex = '000000000000000000000000';
-        
-                    if (x == 'XRP')
-                        hex += '000000';
-                    else
-                    {
-                        let ascii = [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2)];
-                        for (let i = 0; i < ascii.length; ++i)
-                        {
-                            let a = ascii[i].toString(16);
-                            if (a.length == 1)
-                                a = '0' + ascii[i];
-                            hex += a;
-                        }
-                    }
-
-                    hex += '0000000000';
-                    return hex;
-                }
-                return '0'.repeat(40 - x.length) + x;
-            }
-
-            function intToHex(x, n, m)
-            {
-                console.log(x);
-                x = parseInt('' + x);
-                x = x.toString(16);
-                
-                if (x.length > n && m !== undefined)
-                    x = '0'.repeat(m - x.length) + x;
-                else
-                    x = '0'.repeat(n - x.length) + x;
-                return x.toUpperCase();
-            }
-        </script>
-
-        <h1 id="nam">Content</h1>
-        <div id="raw" class="output"></div>
-        
-        <h1>Keylet</h1>
-        <div id="out" class="output"></div>
-        
-        <h1>C-Array</h1>
-        <div id="arr" class="output"></div>
-        
-
-        <br />
-
-        <div>
-        <button onclick="out('amendments', ['f'])">amendments</button>
-        <button onclick="out('emittedDir', ['F'], '0064')">emittedDir</button>
-        <button onclick="out('fees', ['e'], '0073')">fees</button>
-        <button onclick="out('negativeUNL', ['N'])">negativeUNL</button>
-        <button onclick="out('UNLReport', ['R'])">UNLReport</button>
-        <button onclick="out('skip', ['s'], '0068')">skip</button>
-        </div>
-        
-        
-        <div>
-            <button onclick="accountValidate('account') &&
-                out('account', ['a', accountToHex(document.getElementById('account').value)])">account</button>&nbsp;
-            <input type="text" id="account" placeholder="account">
-        </div>
-        
-        <div>
-        <button onclick="
-            currencyValidate('book_currency') && 
-            (
-                document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP' ||
-                accountValidate('book_account')
-            ) &&
-            currencyValidate('book_currency2') && 
-            (
-                document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP' ||
-                accountValidate('book_account2')
-            ) &&
-            out('book', ['B',
-                document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP' 
-                    ? '0'.repeat(40)
-                    : currencyToHex(document.getElementById('book_currency').value),
-                document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP'
-                    ? '0'.repeat(40)
-                    : currencyToHex(document.getElementById('book_currency2').value),
-                document.getElementById('book_currency').value.trim().toUpperCase() == 'XRP'
-                    ? '0'.repeat(40)
-                    : accountToHex(document.getElementById('book_account').value),
-                document.getElementById('book_currency2').value.trim().toUpperCase() == 'XRP'
-                    ? '0'.repeat(40)
-                    : accountToHex(document.getElementById('book_account2').value),
-                ], '0064'
-            )">book</button>&nbsp;
-        <input type="text" id="book_account" placeholder="issuer 1">
-        <input type="text" id="book_currency" placeholder="currency 1" style="width:12em;">
-        <input type="text" id="book_account2" placeholder="issuer 2">
-        <input type="text" id="book_currency2" placeholder="currency 2" style="width:12em;">
-        </div>
-
-        <div>
-        <button onclick="
-            accountValidate('check_account') &&
-            (
-                hexValidate('check_seq', 64) ||
-                intValidate('check_seq', 8)
-            ) &&
-            out('check', 
-            ['C', 
-                accountToHex(document.getElementById('check_account').value), 
-                intValidate('check_seq', 8) 
-                    ? intToHex(document.getElementById('check_seq').value, 8)
-                    : hexValidate('check_seq', 64) ? '' + document.getElementById('check_seq').value : ''
-            ])">check</button>&nbsp;
-        <input type="text" id="check_account" placeholder="account">
-        <input type="text" id="check_seq" placeholder="uint256 or uint32 (seq)">
-        </div>
-        
-
-        <div>
-        <button onclick="
-            accountValidate('depositPreauth_account') &&
-            accountValidate('depositPreauth_account2') &&
-            out('depositPreauth', 
-            ['p', 
-                accountToHex(document.getElementById('depositPreauth_account').value), 
-                accountToHex(document.getElementById('depositPreauth_account2').value), 
-            ])">depositPreauth</button>&nbsp;
-        <input type="text" id="depositPreauth_account" placeholder="account (owner)">
-        <input type="text" id="depositPreauth_account2" placeholder="account (authorized)">
-        </div>
-        
-
-        <div>
-        <button onclick="hexValidate('emittedTxn', 64) &&
-            out('emittedTxn', ['E', ''+document.getElementById('emittedTxn').value])">emittedTxn</button>&nbsp;
-        <input type="text" id="emittedTxn" placeholder="uint256">
-        </div>
-        
-        
-
-        <div>
-        <button onclick="
-            accountValidate('escrow_account') &&
-            (
-                hexValidate('escrow_seq', 64) ||
-                intValidate('escrow_seq', 8)
-            ) &&
-            out('escrow', 
-            ['u', 
-                accountToHex(document.getElementById('escrow_account').value), 
-                intValidate('escrow_seq', 8) 
-                    ? intToHex(document.getElementById('escrow_seq').value, 8)
-                    : hexValidate('escrow_seq', 64) ? '' + document.getElementById('escrow_seq').value : ''
-            ])">escrow</button>&nbsp;
-        <input type="text" id="escrow_account" placeholder="account">
-        <input type="text" id="escrow_seq" placeholder="uint256 or uint32 (seq)">
-        </div>
-        
-
-        <div>
-        <button onclick="accountValidate('hook') &&
-            out('hook', ['H', accountToHex(document.getElementById('hook').value)])">hook</button>&nbsp;
-        <input type="text" id="hook" placeholder="account">
-        </div>
-        
-
-        <div>
-        <button onclick="hexValidate('hookDefinition', 64) &&
-            out('hookDefinition', ['D', ''+document.getElementById('hookDefinition').value])">hookDefinition</button>&nbsp;
-        <input type="text" id="hookDefinition" placeholder="uint256">
-        </div>
-        
-        <div>
-        <button onclick="
-                accountValidate('hookState_account') &&
-                hexValidate('hookState_key', 64) &&
-                hexValidate('hookState_namespace', 64) &&
-            out('hookState', 
-            ['v', 
-                accountToHex(document.getElementById('hookState_account').value), 
-                '' + document.getElementById('hookState_key').value,
-                '' + document.getElementById('hookState_namespace').value
-            ])">hookState</button>&nbsp;
-        <input type="text" id="hookState_account" placeholder="account">
-        <input type="text" id="hookState_key" placeholder="uint256 (key)">
-        <input type="text" id="hookState_namespace" placeholder="uint256 (namespace)">
-        </div>
-        
-        <div>
-        <button onclick="
-                accountValidate('hookStateDir_account') &&
-                hexValidate('hookStateDir_namespace', 64) &&
-            out('hookStateDir', 
-            ['J', 
-                accountToHex(document.getElementById('hookStateDir_account').value), 
-                '' + document.getElementById('hookStateDir_namespace').value
-            ], '0064')">hookStateDir</button>&nbsp;
-        <input type="text" id="hookStateDir_account" placeholder="account">
-        <input type="text" id="hookStateDir_namespace" placeholder="uint256 (namespace)">
-        </div>
-        
-
-        <div>
-        <button onclick="
-            accountValidate('line_account') &&
-            accountValidate('line_account2') &&
-            currencyValidate('line_currency') &&
-            out_line(
-                accountToHex(document.getElementById('line_account').value), 
-                accountToHex(document.getElementById('line_account2').value), 
-                currencyToHex(document.getElementById('line_currency').value))">line</button>&nbsp;
-        <input type="text" id="line_account" placeholder="account (party A)">
-        <input type="text" id="line_account2" placeholder="account (party B)">
-        <input type="text" id="line_currency" placeholder="currency" style="width:12em;">
-        </div>
-        
-
-        <div>
-        <button onclick="accountValidate('nftBuys') &&
-            out('nftBuys', ['h', accountToHex(document.getElementById('nftBuys').value)], '0064')">nftBuys</button>&nbsp;
-        <input type="text" id="nftBuys" placeholder="account">
-        </div>
-        
-
-
-        <div>
-        <button onclick="
-                accountValidate('nftPage_account') &&
-                hexValidate('nftPage_token', 64) &&
-            out_nftpage('nftPage', accountToHex(document.getElementById('nftPage_account').value),
-            ''+document.getElementById('nftPage_token').value)">nftPage</button>&nbsp;
-        <input type="text" id="nftPage_account" placeholder="account">
-        <input type="text" id="nftPage_token" placeholder="uint256 (token)">
-        </div>
-        
-
-
-        <div>
-        <button onclick="accountValidate('nftPageMax') &&
-            out_nftpage('nftPageMax', accountToHex(document.getElementById('nftPageMax').value), 'F'.repeat(64))">nftPageMax</button>&nbsp;
-        <input type="text" id="nftPageMax" placeholder="account">
-        </div>
-        
-
-        <div>
-        <button onclick="accountValidate('nftPageMin') &&
-            out_nftpage('nftPageMin', accountToHex(document.getElementById('nftPageMin').value), '0'.repeat(64))">nftPageMin</button>&nbsp;
-        <input type="text" id="nftPageMin" placeholder="account">
-        </div>
-        
-
-        <div>
-        <button onclick="accountValidate('nftSells') &&
-            out('nftSells', ['i', accountToHex(document.getElementById('nftSells').value)], '0064')">nftSells</button>&nbsp;
-        <input type="text" id="nftSells" placeholder="account">
-        </div>
-        
-
-        <div>
-        <button onclick="
-            accountValidate('nftoffer_account') &&
-            (
-                hexValidate('nftoffer_seq', 64) ||
-                intValidate('nftoffer_seq', 8)
-            ) &&
-            out('nftOffer', 
-            ['q', 
-                accountToHex(document.getElementById('nftoffer_account').value), 
-                intValidate('nftoffer_seq', 8) 
-                    ? intToHex(document.getElementById('nftoffer_seq').value, 8)
-                    : hexValidate('nftoffer_seq', 64) ? '' + document.getElementById('nftoffer_seq').value : ''
-            ])">nftoffer</button>&nbsp;
-        <input type="text" id="nftoffer_account" placeholder="account">
-        <input type="text" id="nftoffer_seq" placeholder="uint256 or uint32 (seq)">
-        </div>
-        
-
-        <div>
-        <button onclick="
-            accountValidate('offer_account') &&
-            (
-                hexValidate('offer_seq', 64) ||
-                intValidate('offer_seq', 8)
-            ) &&
-            out('offer', 
-            ['o', 
-                accountToHex(document.getElementById('offer_account').value), 
-                intValidate('offer_seq', 8) 
-                    ? intToHex(document.getElementById('offer_seq').value, 8)
-                    : hexValidate('offer_seq', 64) ? '' + document.getElementById('offer_seq').value : ''
-            ])">offer</button>&nbsp;
-        <input type="text" id="offer_account" placeholder="account">
-        <input type="text" id="offer_seq" placeholder="uint256 or uint32 (seq)">
-        </div>
-        
-
-        
-        <div>
-        <button onclick="accountValidate('ownerDir') &&
-            out('ownerDir', ['O', accountToHex(document.getElementById('ownerDir').value)], '0064')">ownerDir</button>&nbsp;
-        <input type="text" id="ownerDir" placeholder="account">
-        </div>
-        
-
-        <div>
-        <button onclick="
-                hexValidate('page_key', 64) &&
-                intValidate('page_q', 16) &&
-            out('page',
-                ['d', 
-                    document.getElementById('page_key').value, 
-                    intToHex('' + document.getElementById('page_q').value, 16)]
-            )">page</button>&nbsp;
-        <input type="text" id="page_key" placeholder="uint256 (key)">
-        <input type="text" id="page_q" placeholder="uint64 (index)">
-        </div>
-        
-        
-        <div>
-        <button onclick="
-            accountValidate('payChan_account') &&
-            accountValidate('payChan_account2') &&
-            (
-                hexValidate('payChan_seq', 64) ||
-                intValidate('payChan_seq', 8)
-            ) &&
-            out('payChan', 
-            ['x', 
-                accountToHex(document.getElementById('payChan_account').value), 
-                accountToHex(document.getElementById('payChan_account2').value), 
-                intValidate('payChan_seq', 8) 
-                    ? intToHex(document.getElementById('payChan_seq').value, 8)
-                    : hexValidate('payChan_seq', 64) ? '' + document.getElementById('payChan_seq').value : ''
-            ])">payChan</button>&nbsp;
-        <input type="text" id="payChan_account" placeholder="account (source)">
-        <input type="text" id="payChan_account2" placeholder="account (destination)">
-        <input type="text" id="payChan_seq" placeholder="uint256 or uint32 (seq)" style="width:12em;">
-        </div>
-        
-
-        <div>
-        <button onclick="
-                hexValidate('quality_key', 64) &&
-                intValidate('quality_q', 16) &&
-            out_quality(document.getElementById('quality_key').value, 
-                intToHex('' + document.getElementById('quality_q').value, 16))">quality</button>&nbsp;
-        <input type="text" id="quality_key" placeholder="uint256 (key)">
-        <input type="text" id="quality_q" placeholder="uint64 (q)">
-        </div>
-        
-        
-        <div>
-        <button onclick="accountValidate('signers') &&
-            out('signers', ['S', accountToHex(document.getElementById('signers').value), intToHex(0, 8)])">signers</button>&nbsp;
-        <input type="text" id="signers" placeholder="account">
-        </div>
-        
-
-
-        <div>
-        <button onclick="intValidate('skip', 8) &&
-            out('skip', ['s', intToHex(document.getElementById('skip').value, 8)], '0068')">skip</button>&nbsp;
-        <input type="text" id="skip" placeholder="ledger index">
-        </div>
-        
-
-        <div>
-        <button onclick="
-            accountValidate('ticket_account') &&
-            intValidate('ticket_seq', 8) &&
-            out('ticket', 
-            ['T', 
-                accountToHex(document.getElementById('ticket_account').value), 
-                intToHex(document.getElementById('ticket_seq').value, 8)
-            ])">ticket</button>&nbsp;
-        <input type="text" id="ticket_account" placeholder="account">
-        <input type="text" id="ticket_seq" placeholder="uint32 (seq)">
-        </div>
-
-        <div>
-        <button onclick="
-            accountValidate('uritoken_account') &&
-            uriValidate('uritoken_uri') &&
-            out('uritoken',
-            ['U',
-                accountToHex(document.getElementById('uritoken_account').value),
-                uriToHex(uriValidate('uritoken_uri')),
-            ])">uritoken</button>&nbsp;
-        <input type="text" id="uritoken_account" placeholder="issuer">
-        <input type="text" id="uritoken_uri" placeholder="uri">
-        </div>
-
-
-
-                <script>
-                    !function(n,r){"object"==typeof exports&&"undefined"!=typeof module?module.exports=r():"function"==typeof define&&define.amd?define(r):(n="undefined"!=typeof globalThis?globalThis:n||self).jsSHA=r()}(this,(function(){"use strict";var n=function(r,t){return n=Object.setPrototypeOf||{__proto__:[]}instanceof Array&&function(n,r){n.__proto__=r}||function(n,r){for(var t in r)Object.prototype.hasOwnProperty.call(r,t)&&(n[t]=r[t])},n(r,t)};var r="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",t="ARRAYBUFFER not supported by this environment",e="UINT8ARRAY not supported by this environment";function i(n,r,t,e){var i,o,u,w=r||[0],s=(t=t||0)>>>3,f=-1===e?3:0;for(i=0;i<n.length;i+=1)o=(u=i+s)>>>2,w.length<=o&&w.push(0),w[o]|=n[i]<<8*(f+e*(u%4));return{value:w,binLen:8*n.length+t}}function o(n,o,u){switch(o){case"UTF8":case"UTF16BE":case"UTF16LE":break;default:throw new Error("encoding must be UTF8, UTF16BE, or UTF16LE")}switch(n){case"HEX":return function(n,r,t){return function(n,r,t,e){var i,o,u,w;if(0!=n.length%2)throw new Error("String of HEX type must be in byte increments");var s=r||[0],f=(t=t||0)>>>3,h=-1===e?3:0;for(i=0;i<n.length;i+=2){if(o=parseInt(n.substr(i,2),16),isNaN(o))throw new Error("String of HEX type contains invalid characters");for(u=(w=(i>>>1)+f)>>>2;s.length<=u;)s.push(0);s[u]|=o<<8*(h+e*(w%4))}return{value:s,binLen:4*n.length+t}}(n,r,t,u)};case"TEXT":return function(n,r,t){return function(n,r,t,e,i){var o,u,w,s,f,h,a,c,v=0,E=t||[0],l=(e=e||0)>>>3;if("UTF8"===r)for(a=-1===i?3:0,w=0;w<n.length;w+=1)for(u=[],128>(o=n.charCodeAt(w))?u.push(o):2048>o?(u.push(192|o>>>6),u.push(128|63&o)):55296>o||57344<=o?u.push(224|o>>>12,128|o>>>6&63,128|63&o):(w+=1,o=65536+((1023&o)<<10|1023&n.charCodeAt(w)),u.push(240|o>>>18,128|o>>>12&63,128|o>>>6&63,128|63&o)),s=0;s<u.length;s+=1){for(f=(h=v+l)>>>2;E.length<=f;)E.push(0);E[f]|=u[s]<<8*(a+i*(h%4)),v+=1}else for(a=-1===i?2:0,c="UTF16LE"===r&&1!==i||"UTF16LE"!==r&&1===i,w=0;w<n.length;w+=1){for(o=n.charCodeAt(w),!0===c&&(o=(s=255&o)<<8|o>>>8),f=(h=v+l)>>>2;E.length<=f;)E.push(0);E[f]|=o<<8*(a+i*(h%4)),v+=2}return{value:E,binLen:8*v+e}}(n,o,r,t,u)};case"B64":return function(n,t,e){return function(n,t,e,i){var o,u,w,s,f,h,a=0,c=t||[0],v=(e=e||0)>>>3,E=-1===i?3:0,l=n.indexOf("=");if(-1===n.search(/^[a-zA-Z0-9=+/]+$/))throw new Error("Invalid character in base-64 string");if(n=n.replace(/=/g,""),-1!==l&&l<n.length)throw new Error("Invalid '=' found in base-64 string");for(o=0;o<n.length;o+=4){for(s=n.substr(o,4),w=0,u=0;u<s.length;u+=1)w|=r.indexOf(s.charAt(u))<<18-6*u;for(u=0;u<s.length-1;u+=1){for(f=(h=a+v)>>>2;c.length<=f;)c.push(0);c[f]|=(w>>>16-8*u&255)<<8*(E+i*(h%4)),a+=1}}return{value:c,binLen:8*a+e}}(n,t,e,u)};case"BYTES":return function(n,r,t){return function(n,r,t,e){var i,o,u,w,s=r||[0],f=(t=t||0)>>>3,h=-1===e?3:0;for(o=0;o<n.length;o+=1)i=n.charCodeAt(o),u=(w=o+f)>>>2,s.length<=u&&s.push(0),s[u]|=i<<8*(h+e*(w%4));return{value:s,binLen:8*n.length+t}}(n,r,t,u)};case"ARRAYBUFFER":try{new ArrayBuffer(0)}catch(n){throw new Error(t)}return function(n,r,t){return function(n,r,t,e){return i(new Uint8Array(n),r,t,e)}(n,r,t,u)};case"UINT8ARRAY":try{new Uint8Array(0)}catch(n){throw new Error(e)}return function(n,r,t){return i(n,r,t,u)};default:throw new Error("format must be HEX, TEXT, B64, BYTES, ARRAYBUFFER, or UINT8ARRAY")}}function u(n,i,o,u){switch(n){case"HEX":return function(n){return function(n,r,t,e){var i,o,u="0123456789abcdef",w="",s=r/8,f=-1===t?3:0;for(i=0;i<s;i+=1)o=n[i>>>2]>>>8*(f+t*(i%4)),w+=u.charAt(o>>>4&15)+u.charAt(15&o);return e.outputUpper?w.toUpperCase():w}(n,i,o,u)};case"B64":return function(n){return function(n,t,e,i){var o,u,w,s,f,h="",a=t/8,c=-1===e?3:0;for(o=0;o<a;o+=3)for(s=o+1<a?n[o+1>>>2]:0,f=o+2<a?n[o+2>>>2]:0,w=(n[o>>>2]>>>8*(c+e*(o%4))&255)<<16|(s>>>8*(c+e*((o+1)%4))&255)<<8|f>>>8*(c+e*((o+2)%4))&255,u=0;u<4;u+=1)h+=8*o+6*u<=t?r.charAt(w>>>6*(3-u)&63):i.b64Pad;return h}(n,i,o,u)};case"BYTES":return function(n){return function(n,r,t){var e,i,o="",u=r/8,w=-1===t?3:0;for(e=0;e<u;e+=1)i=n[e>>>2]>>>8*(w+t*(e%4))&255,o+=String.fromCharCode(i);return o}(n,i,o)};case"ARRAYBUFFER":try{new ArrayBuffer(0)}catch(n){throw new Error(t)}return function(n){return function(n,r,t){var e,i=r/8,o=new ArrayBuffer(i),u=new Uint8Array(o),w=-1===t?3:0;for(e=0;e<i;e+=1)u[e]=n[e>>>2]>>>8*(w+t*(e%4))&255;return o}(n,i,o)};case"UINT8ARRAY":try{new Uint8Array(0)}catch(n){throw new Error(e)}return function(n){return function(n,r,t){var e,i=r/8,o=-1===t?3:0,u=new Uint8Array(i);for(e=0;e<i;e+=1)u[e]=n[e>>>2]>>>8*(o+t*(e%4))&255;return u}(n,i,o)};default:throw new Error("format must be HEX, B64, BYTES, ARRAYBUFFER, or UINT8ARRAY")}}var w=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298],s=[3238371032,914150663,812702999,4144912697,4290775857,1750603025,1694076839,3204075428],f=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];function h(n){var r={outputUpper:!1,b64Pad:"=",outputLen:-1},t=n||{},e="Output length must be a multiple of 8";if(r.outputUpper=t.outputUpper||!1,t.b64Pad&&(r.b64Pad=t.b64Pad),t.outputLen){if(t.outputLen%8!=0)throw new Error(e);r.outputLen=t.outputLen}else if(t.shakeLen){if(t.shakeLen%8!=0)throw new Error(e);r.outputLen=t.shakeLen}if("boolean"!=typeof r.outputUpper)throw new Error("Invalid outputUpper formatting option");if("string"!=typeof r.b64Pad)throw new Error("Invalid b64Pad formatting option");return r}var a=function(){function n(n,r,t){var e=t||{};if(this.t=r,this.i=e.encoding||"UTF8",this.numRounds=e.numRounds||1,isNaN(this.numRounds)||this.numRounds!==parseInt(this.numRounds,10)||1>this.numRounds)throw new Error("numRounds must a integer >= 1");this.o=n,this.u=[],this.h=0,this.v=!1,this.l=0,this.A=!1,this.p=[],this.U=[]}return n.prototype.update=function(n){var r,t=0,e=this.T>>>5,i=this.R(n,this.u,this.h),o=i.binLen,u=i.value,w=o>>>5;for(r=0;r<w;r+=e)t+this.T<=o&&(this.m=this.F(u.slice(r,r+e),this.m),t+=this.T);return this.l+=t,this.u=u.slice(t>>>5),this.h=o%this.T,this.v=!0,this},n.prototype.getHash=function(n,r){var t,e,i=this.g,o=h(r);if(this.B){if(-1===o.outputLen)throw new Error("Output length must be specified in options");i=o.outputLen}var w=u(n,i,this.H,o);if(this.A&&this.S)return w(this.S(o));for(e=this.Y(this.u.slice(),this.h,this.l,this.C(this.m),i),t=1;t<this.numRounds;t+=1)this.B&&i%32!=0&&(e[e.length-1]&=16777215>>>24-i%32),e=this.Y(e,i,0,this.I(this.o),i);return w(e)},n.prototype.setHMACKey=function(n,r,t){if(!this.L)throw new Error("Variant does not support HMAC");if(this.v)throw new Error("Cannot set MAC key after calling update");var e=o(r,(t||{}).encoding||"UTF8",this.H);this.N(e(n))},n.prototype.N=function(n){var r,t=this.T>>>3,e=t/4-1;if(1!==this.numRounds)throw new Error("Cannot set numRounds with MAC");if(this.A)throw new Error("MAC key already set");for(t<n.binLen/8&&(n.value=this.Y(n.value,n.binLen,0,this.I(this.o),this.g));n.value.length<=e;)n.value.push(0);for(r=0;r<=e;r+=1)this.p[r]=909522486^n.value[r],this.U[r]=1549556828^n.value[r];this.m=this.F(this.p,this.m),this.l=this.T,this.A=!0},n.prototype.getHMAC=function(n,r){var t=h(r);return u(n,this.g,this.H,t)(this.X())},n.prototype.X=function(){var n;if(!this.A)throw new Error("Cannot call getHMAC without first setting MAC key");var r=this.Y(this.u.slice(),this.h,this.l,this.C(this.m),this.g);return n=this.F(this.U,this.I(this.o)),n=this.Y(r,this.g,this.T,n,this.g)},n}(),c=function(n,r){this.M=n,this.O=r};function v(n,r){var t;return r<32?(t=32-r,new c(n.M>>>r|n.O<<t,n.O>>>r|n.M<<t)):(t=64-r,new c(n.O>>>r|n.M<<t,n.M>>>r|n.O<<t))}function E(n,r){return new c(n.M>>>r,n.O>>>r|n.M<<32-r)}function l(n,r,t){return new c(n.M&r.M^~n.M&t.M,n.O&r.O^~n.O&t.O)}function A(n,r,t){return new c(n.M&r.M^n.M&t.M^r.M&t.M,n.O&r.O^n.O&t.O^r.O&t.O)}function d(n){var r=v(n,28),t=v(n,34),e=v(n,39);return new c(r.M^t.M^e.M,r.O^t.O^e.O)}function p(n,r){var t,e;t=(65535&n.O)+(65535&r.O);var i=(65535&(e=(n.O>>>16)+(r.O>>>16)+(t>>>16)))<<16|65535&t;return t=(65535&n.M)+(65535&r.M)+(e>>>16),e=(n.M>>>16)+(r.M>>>16)+(t>>>16),new c((65535&e)<<16|65535&t,i)}function y(n,r,t,e){var i,o;i=(65535&n.O)+(65535&r.O)+(65535&t.O)+(65535&e.O);var u=(65535&(o=(n.O>>>16)+(r.O>>>16)+(t.O>>>16)+(e.O>>>16)+(i>>>16)))<<16|65535&i;return i=(65535&n.M)+(65535&r.M)+(65535&t.M)+(65535&e.M)+(o>>>16),o=(n.M>>>16)+(r.M>>>16)+(t.M>>>16)+(e.M>>>16)+(i>>>16),new c((65535&o)<<16|65535&i,u)}function U(n,r,t,e,i){var o,u;o=(65535&n.O)+(65535&r.O)+(65535&t.O)+(65535&e.O)+(65535&i.O);var w=(65535&(u=(n.O>>>16)+(r.O>>>16)+(t.O>>>16)+(e.O>>>16)+(i.O>>>16)+(o>>>16)))<<16|65535&o;return o=(65535&n.M)+(65535&r.M)+(65535&t.M)+(65535&e.M)+(65535&i.M)+(u>>>16),u=(n.M>>>16)+(r.M>>>16)+(t.M>>>16)+(e.M>>>16)+(i.M>>>16)+(o>>>16),new c((65535&u)<<16|65535&o,w)}function T(n){var r=v(n,1),t=v(n,8),e=E(n,7);return new c(r.M^t.M^e.M,r.O^t.O^e.O)}function b(n){var r=v(n,14),t=v(n,18),e=v(n,41);return new c(r.M^t.M^e.M,r.O^t.O^e.O)}var R=[new c(w[0],3609767458),new c(w[1],602891725),new c(w[2],3964484399),new c(w[3],2173295548),new c(w[4],4081628472),new c(w[5],3053834265),new c(w[6],2937671579),new c(w[7],3664609560),new c(w[8],2734883394),new c(w[9],1164996542),new c(w[10],1323610764),new c(w[11],3590304994),new c(w[12],4068182383),new c(w[13],991336113),new c(w[14],633803317),new c(w[15],3479774868),new c(w[16],2666613458),new c(w[17],944711139),new c(w[18],2341262773),new c(w[19],2007800933),new c(w[20],1495990901),new c(w[21],1856431235),new c(w[22],3175218132),new c(w[23],2198950837),new c(w[24],3999719339),new c(w[25],766784016),new c(w[26],2566594879),new c(w[27],3203337956),new c(w[28],1034457026),new c(w[29],2466948901),new c(w[30],3758326383),new c(w[31],168717936),new c(w[32],1188179964),new c(w[33],1546045734),new c(w[34],1522805485),new c(w[35],2643833823),new c(w[36],2343527390),new c(w[37],1014477480),new c(w[38],1206759142),new c(w[39],344077627),new c(w[40],1290863460),new c(w[41],3158454273),new c(w[42],3505952657),new c(w[43],106217008),new c(w[44],3606008344),new c(w[45],1432725776),new c(w[46],1467031594),new c(w[47],851169720),new c(w[48],3100823752),new c(w[49],1363258195),new c(w[50],3750685593),new c(w[51],3785050280),new c(w[52],3318307427),new c(w[53],3812723403),new c(w[54],2003034995),new c(w[55],3602036899),new c(w[56],1575990012),new c(w[57],1125592928),new c(w[58],2716904306),new c(w[59],442776044),new c(w[60],593698344),new c(w[61],3733110249),new c(w[62],2999351573),new c(w[63],3815920427),new c(3391569614,3928383900),new c(3515267271,566280711),new c(3940187606,3454069534),new c(4118630271,4000239992),new c(116418474,1914138554),new c(174292421,2731055270),new c(289380356,3203993006),new c(460393269,320620315),new c(685471733,587496836),new c(852142971,1086792851),new c(1017036298,365543100),new c(1126000580,2618297676),new c(1288033470,3409855158),new c(1501505948,4234509866),new c(1607167915,987167468),new c(1816402316,1246189591)];function m(n){return"SHA-384"===n?[new c(3418070365,s[0]),new c(1654270250,s[1]),new c(2438529370,s[2]),new c(355462360,s[3]),new c(1731405415,s[4]),new c(41048885895,s[5]),new c(3675008525,s[6]),new c(1203062813,s[7])]:[new c(f[0],4089235720),new c(f[1],2227873595),new c(f[2],4271175723),new c(f[3],1595750129),new c(f[4],2917565137),new c(f[5],725511199),new c(f[6],4215389547),new c(f[7],327033209)]}function F(n,r){var t,e,i,o,u,w,s,f,h,a,m,F,g,B,H,S,Y=[];for(t=r[0],e=r[1],i=r[2],o=r[3],u=r[4],w=r[5],s=r[6],f=r[7],m=0;m<80;m+=1)m<16?(F=2*m,Y[m]=new c(n[F],n[F+1])):Y[m]=y((g=Y[m-2],B=void 0,H=void 0,S=void 0,B=v(g,19),H=v(g,61),S=E(g,6),new c(B.M^H.M^S.M,B.O^H.O^S.O)),Y[m-7],T(Y[m-15]),Y[m-16]),h=U(f,b(u),l(u,w,s),R[m],Y[m]),a=p(d(t),A(t,e,i)),f=s,s=w,w=u,u=p(o,h),o=i,i=e,e=t,t=p(h,a);return r[0]=p(t,r[0]),r[1]=p(e,r[1]),r[2]=p(i,r[2]),r[3]=p(o,r[3]),r[4]=p(u,r[4]),r[5]=p(w,r[5]),r[6]=p(s,r[6]),r[7]=p(f,r[7]),r}return function(r){function t(n,t,e){var i=this;if("SHA-384"!==n&&"SHA-512"!==n)throw new Error("Chosen SHA variant is not supported");var u=e||{};return(i=r.call(this,n,t,e)||this).S=i.X,i.L=!0,i.H=-1,i.R=o(i.t,i.i,i.H),i.F=F,i.C=function(n){return n.slice()},i.I=m,i.Y=function(r,t,e,i){return function(n,r,t,e,i){for(var o,u=31+(r+129>>>10<<5),w=r+t;n.length<=u;)n.push(0);for(n[r>>>5]|=128<<24-r%32,n[u]=4294967295&w,n[u-1]=w/4294967296|0,o=0;o<n.length;o+=32)e=F(n.slice(o,o+32),e);return"SHA-384"===i?[e[0].M,e[0].O,e[1].M,e[1].O,e[2].M,e[2].O,e[3].M,e[3].O,e[4].M,e[4].O,e[5].M,e[5].O]:[e[0].M,e[0].O,e[1].M,e[1].O,e[2].M,e[2].O,e[3].M,e[3].O,e[4].M,e[4].O,e[5].M,e[5].O,e[6].M,e[6].O,e[7].M,e[7].O]}(r,t,e,i,n)},i.m=m(n),i.T=1024,i.g="SHA-384"===n?384:512,i.B=!1,u.hmacKey&&i.N(function(n,r,t,e){var i=n+" must include a value and format";if(!r){if(!e)throw new Error(i);return e}if(void 0===r.value||!r.format)throw new Error(i);return o(r.format,r.encoding||"UTF8",t)(r.value)}("hmacKey",u.hmacKey,i.H)),i}return function(r,t){if("function"!=typeof t&&null!==t)throw new TypeError("Class extends value "+String(t)+" is not a constructor or null");function e(){this.constructor=r}n(r,t),r.prototype=null===t?Object.create(t):(e.prototype=t.prototype,new e)}(t,r),t}(a)}));
-
-                </script>
-
-        <script defer>
-            out('amendments', ['f']);
-        </script>
-        
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Keylet tools</h1>
+      <p class="lede">Compute ledger object keys for the XRP Ledger and Xahau, and see exactly which bytes go into each hash.</p>
+    </div>
+    <div class="chain" role="group" aria-label="Network">
+      <button type="button" data-chain="xrpl">XRPL</button>
+      <button type="button" data-chain="xahau">Xahau</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside aria-label="Keylets">
+      <input class="search" id="search" type="search" placeholder="Find a keylet" autocomplete="off" spellcheck="false" aria-label="Find a keylet">
+      <nav id="list"></nav>
+    </aside>
+    <main>
+      <section class="panel" id="form-panel" aria-live="off"></section>
+      <section class="panel result" id="result" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Definitions follow rippled <code>develop</code> (9 Nov 2026, release 3.4.1) and xahaud <code>dev</code> (6 Nov 2026, release 2026.10.13). Every keylet in the source is listed; some depend on amendments that may not be enabled on a given network.</p>
+    <p>Accounts accept an r-address (checksum verified) or 40 hex characters. Results are computed locally in your browser.</p>
+  </footer>
+</div>
+
+<script>
+// Keylet core: hashing, parsing, and keylet definitions for XRPL (rippled) and Xahau (xahaud).
+// Sources: rippled develop src/libxrpl/protocol/Indexes.cpp (Nov 2026) and
+//          xahaud dev src/libxrpl/protocol/Indexes.cpp (Nov 2026).
+const KL = (() => {
+  'use strict';
+
+  // ---------- bytes ----------
+  const hex = (b) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  const unhex = (h) => {
+    const out = new Uint8Array(h.length / 2);
+    for (let i = 0; i < out.length; i++) out[i] = parseInt(h.substr(i * 2, 2), 16);
+    return out;
+  };
+  const concat = (parts) => {
+    const n = parts.reduce((a, p) => a + p.length, 0);
+    const out = new Uint8Array(n);
+    let o = 0;
+    for (const p of parts) { out.set(p, o); o += p.length; }
+    return out;
+  };
+  const u16 = (n) => new Uint8Array([(n >>> 8) & 255, n & 255]);
+  const u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+  const u64 = (n) => { n = BigInt(n); const o = new Uint8Array(8); for (let i = 7; i >= 0; i--) { o[i] = Number(n & 255n); n >>= 8n; } return o; };
+  const cmp = (a, b) => { for (let i = 0; i < Math.min(a.length, b.length); i++) if (a[i] !== b[i]) return a[i] - b[i]; return a.length - b.length; };
+  const zeros = (n) => new Uint8Array(n);
+
+  // ---------- SHA-256 / SHA-512 (sync, constants derived from primes) ----------
+  const primes = (n) => { const p = []; for (let i = 2; p.length < n; i++) if (p.every((q) => i % q)) p.push(i); return p; };
+  const iroot = (x, k) => {
+    const K = BigInt(k);
+    let r = 1n << BigInt(Math.ceil(x.toString(2).length / k) + 1);
+    for (;;) { const nr = ((K - 1n) * r + x / r ** (K - 1n)) / K; if (nr >= r) break; r = nr; }
+    while (r ** K > x) r--;
+    while ((r + 1n) ** K <= x) r++;
+    return r;
+  };
+  const P80 = primes(80);
+  const M64 = (1n << 64n) - 1n;
+  const K512 = P80.map((p) => iroot(BigInt(p) << 192n, 3) & M64);
+  const H512 = P80.slice(0, 8).map((p) => iroot(BigInt(p) << 128n, 2) & M64);
+  const K256 = P80.slice(0, 64).map((p) => Number(iroot(BigInt(p) << 96n, 3) & 0xffffffffn));
+  const H256 = P80.slice(0, 8).map((p) => Number(iroot(BigInt(p) << 64n, 2) & 0xffffffffn));
+
+  function pad(msg, block, lenBytes) {
+    const len = msg.length;
+    const total = Math.ceil((len + 1 + lenBytes) / block) * block;
+    const buf = new Uint8Array(total);
+    buf.set(msg); buf[len] = 0x80;
+    let bits = BigInt(len) * 8n;
+    for (let i = 0; i < lenBytes; i++) { buf[total - 1 - i] = Number(bits & 255n); bits >>= 8n; }
+    return buf;
+  }
+
+  function sha512(msg) {
+    const rotr = (x, n) => ((x >> n) | (x << (64n - n))) & M64;
+    const buf = pad(msg, 128, 16);
+    const dv = new DataView(buf.buffer);
+    const H = H512.slice();
+    const W = new Array(80);
+    for (let off = 0; off < buf.length; off += 128) {
+      for (let t = 0; t < 16; t++) W[t] = (BigInt(dv.getUint32(off + t * 8)) << 32n) | BigInt(dv.getUint32(off + t * 8 + 4));
+      for (let t = 16; t < 80; t++) {
+        const a = W[t - 15], b = W[t - 2];
+        const s0 = rotr(a, 1n) ^ rotr(a, 8n) ^ (a >> 7n);
+        const s1 = rotr(b, 19n) ^ rotr(b, 61n) ^ (b >> 6n);
+        W[t] = (W[t - 16] + s0 + W[t - 7] + s1) & M64;
+      }
+      let [a, b, c, d, e, f, g, h] = H;
+      for (let t = 0; t < 80; t++) {
+        const S1 = rotr(e, 14n) ^ rotr(e, 18n) ^ rotr(e, 41n);
+        const ch = (e & f) ^ (~e & M64 & g);
+        const t1 = (h + S1 + ch + K512[t] + W[t]) & M64;
+        const S0 = rotr(a, 28n) ^ rotr(a, 34n) ^ rotr(a, 39n);
+        const mj = (a & b) ^ (a & c) ^ (b & c);
+        h = g; g = f; f = e; e = (d + t1) & M64; d = c; c = b; b = a; a = (t1 + S0 + mj) & M64;
+      }
+      [a, b, c, d, e, f, g, h].forEach((v, i) => { H[i] = (H[i] + v) & M64; });
+    }
+    return concat(H.map((v) => u64(v)));
+  }
+  const sha512Half = (msg) => sha512(msg).slice(0, 32);
+
+  function sha256(msg) {
+    const buf = pad(msg, 64, 8);
+    const dv = new DataView(buf.buffer);
+    const H = H256.slice();
+    const W = new Uint32Array(64);
+    const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+    for (let off = 0; off < buf.length; off += 64) {
+      for (let t = 0; t < 16; t++) W[t] = dv.getUint32(off + t * 4);
+      for (let t = 16; t < 64; t++) {
+        const s0 = rotr(W[t - 15], 7) ^ rotr(W[t - 15], 18) ^ (W[t - 15] >>> 3);
+        const s1 = rotr(W[t - 2], 17) ^ rotr(W[t - 2], 19) ^ (W[t - 2] >>> 10);
+        W[t] = (W[t - 16] + s0 + W[t - 7] + s1) >>> 0;
+      }
+      let [a, b, c, d, e, f, g, h] = H;
+      for (let t = 0; t < 64; t++) {
+        const t1 = (h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K256[t] + W[t]) >>> 0;
+        const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+        h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      [a, b, c, d, e, f, g, h].forEach((v, i) => { H[i] = (H[i] + v) >>> 0; });
+    }
+    return concat(H.map(u32));
+  }
+
+  // ---------- base58 (XRPL alphabet, with checksum) ----------
+  const ALPH = 'rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxyz';
+  function b58check(s, version, payloadLen, what) {
+    let n = 0n;
+    for (const ch of s) {
+      const i = ALPH.indexOf(ch);
+      if (i < 0) throw new Error(`“${ch}” isn’t a valid base58 character`);
+      n = n * 58n + BigInt(i);
+    }
+    let h = n === 0n ? '' : n.toString(16);
+    if (h.length % 2) h = '0' + h;
+    let lead = 0;
+    for (const ch of s) { if (ch === ALPH[0]) lead++; else break; }
+    const b = concat([zeros(lead), unhex(h)]);
+    if (b.length !== 1 + payloadLen + 4) throw new Error(`Not a valid ${what}`);
+    const body = b.slice(0, -4);
+    const ck = sha256(sha256(body)).slice(0, 4);
+    if (cmp(ck, b.slice(-4)) !== 0) throw new Error(`Checksum mismatch, check the ${what} for typos`);
+    if (body[0] !== version) throw new Error(`Not a valid ${what}`);
+    return body.slice(1);
+  }
+
+  // ---------- input parsers (throw Error with a user-facing message) ----------
+  const clean = (s) => (s || '').trim();
+  const isHex = (s) => /^[0-9a-fA-F]*$/.test(s);
+  const strip0x = (s) => s.replace(/^0x/i, '');
+
+  const P = {
+    account(s) {
+      s = clean(s);
+      if (!s) throw new Error('Required');
+      if (s[0] === 'r') return b58check(s, 0x00, 20, 'r-address');
+      const h = strip0x(s);
+      if (isHex(h) && h.length === 40) return unhex(h);
+      throw new Error('Enter an r-address or a 40-character hex AccountID');
+    },
+    u32(s) {
+      s = clean(s);
+      if (!s) throw new Error('Required');
+      let n;
+      if (/^0x[0-9a-f]+$/i.test(s)) n = BigInt(s);
+      else if (/^[0-9]+$/.test(s)) n = BigInt(s);
+      else throw new Error('Enter a whole number (or 0x hex)');
+      if (n > 0xffffffffn) throw new Error('Must fit in 32 bits (max 4294967295)');
+      return u32(Number(n));
+    },
+    u64(s) {
+      s = clean(s);
+      if (!s) throw new Error('Required');
+      let n;
+      if (/^0x[0-9a-f]+$/i.test(s) || /^[0-9]+$/.test(s)) n = BigInt(s);
+      else throw new Error('Enter a whole number (or 0x hex)');
+      if (n > M64) throw new Error('Must fit in 64 bits');
+      return u64(n);
+    },
+    hexN(s, n, what) {
+      s = strip0x(clean(s));
+      if (!s) throw new Error('Required');
+      if (!isHex(s) || s.length !== n * 2) throw new Error(`Enter ${n * 2} hex characters${what ? ' (' + what + ')' : ''}`);
+      return unhex(s);
+    },
+    u256(s) { return P.hexN(s, 32); },
+    seq32or256(s) {
+      s = clean(s);
+      if (/^(0x)?[0-9a-fA-F]{64}$/.test(s)) return unhex(strip0x(s));
+      if (/^[0-9]+$/.test(s) || /^0x[0-9a-f]{1,8}$/i.test(s)) return P.u32(s);
+      if (!s) throw new Error('Required');
+      throw new Error('Enter a uint32 sequence or a 64-character hex uint256');
+    },
+    currency(s, chain) {
+      s = clean(s);
+      if (!s) throw new Error('Required');
+      const up = s.toUpperCase();
+      if (up === 'XRP' || (chain === 'xahau' && up === 'XAH')) return zeros(20);
+      const h = strip0x(s);
+      if (h.length === 40 && isHex(h)) return unhex(h);
+      if (s.length === 3) {
+        const b = zeros(20);
+        for (let i = 0; i < 3; i++) {
+          const c = s.charCodeAt(i);
+          if (c < 0x20 || c > 0x7e) throw new Error('Currency codes use printable ASCII');
+          b[12 + i] = c;
+        }
+        return b;
+      }
+      if (s.length > 3 && s.length <= 20 && /^[\x20-\x7e]+$/.test(s)) {
+        const b = zeros(20);
+        for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+        if (b[0] === 0) throw new Error('Nonstandard codes can’t start with a zero byte');
+        return b;
+      }
+      throw new Error('Enter a 3-letter code, a longer code up to 20 characters, or 40 hex');
+    },
+    blob(s, mode) {
+      s = s || '';
+      if (mode === 'hex') {
+        const h = strip0x(clean(s));
+        if (!h) throw new Error('Required');
+        if (!isHex(h) || h.length % 2) throw new Error('Enter an even number of hex characters');
+        return unhex(h);
+      }
+      if (!s.length) throw new Error('Required');
+      return new TextEncoder().encode(s);
+    },
+    pubkey(s) {
+      s = clean(s);
+      if (!s) throw new Error('Required');
+      if (s[0] === 'n') return b58check(s, 0x1c, 33, 'node public key');
+      const h = strip0x(s);
+      if (isHex(h) && h.length === 66) return unhex(h);
+      throw new Error('Enter a 66-character hex public key or an n… node public key');
+    },
+    mptid(s) { return P.hexN(s, 24, 'MPTokenIssuanceID'); },
+  };
+
+  // ---------- namespaces and ledger entry types per chain ----------
+  const c = (ch) => ch.charCodeAt(0);
+  const NS = {
+    xrpl: {
+      ACCOUNT: c('a'), DIR_NODE: c('d'), TRUST_LINE: c('r'), OFFER: c('o'), OWNER_DIR: c('O'),
+      BOOK_DIR: c('B'), SKIP_LIST: c('s'), ESCROW: c('u'), AMENDMENTS: c('f'), FEE_SETTINGS: c('e'),
+      TICKET: c('T'), SIGNER_LIST: c('S'), PAYMENT_CHANNEL: c('x'), CHECK: c('C'),
+      DEPOSIT_PREAUTH: c('p'), DEPOSIT_PREAUTH_CREDENTIALS: c('P'), NEGATIVE_UNL: c('N'),
+      NFTOKEN_OFFER: c('q'), NFTOKEN_BUY_OFFERS: c('h'), NFTOKEN_SELL_OFFERS: c('i'), AMM: c('A'),
+      DID: c('I'), ORACLE: c('R'), MPTOKEN_ISSUANCE: c('~'), MPTOKEN: c('t'), CREDENTIAL: c('D'),
+      PERMISSIONED_DOMAIN: c('m'), DELEGATE: c('E'), VAULT: c('V'), LOAN_BROKER: c('l'), LOAN: c('L'),
+      SPONSORSHIP: c('>'), TRANSACTION_PROPOSAL: c('y'),
+      BRIDGE: c('H'), XCHAIN_CLAIM_ID: c('Q'), XCHAIN_CREATE_ACCOUNT_CLAIM_ID: c('K'),
+    },
+    xahau: {
+      ACCOUNT: c('a'), DIR_NODE: c('d'), TRUST_LINE: c('r'), OFFER: c('o'), OWNER_DIR: c('O'),
+      BOOK_DIR: c('B'), SKIP_LIST: c('s'), ESCROW: c('u'), AMENDMENTS: c('f'), FEE_SETTINGS: c('e'),
+      TICKET: c('T'), SIGNER_LIST: c('S'), PAYMENT_CHANNEL: c('x'), CHECK: c('C'),
+      DEPOSIT_PREAUTH: c('p'), DEPOSIT_PREAUTH_CREDENTIALS: c('P'), NEGATIVE_UNL: c('N'),
+      HOOK: c('H'), HOOK_STATE_DIR: c('J'), HOOK_STATE: c('v'), HOOK_DEFINITION: c('D'),
+      EMITTED_TXN: c('E'), EMITTED_DIR: c('F'), NFTOKEN_OFFER: c('q'), NFTOKEN_BUY_OFFERS: c('h'),
+      NFTOKEN_SELL_OFFERS: c('i'), URI_TOKEN: c('U'), IMPORT_VLSEQ: c('I'), UNL_REPORT: c('R'),
+      CRON: c('L'), APP_LOADER: c('W'), AMM: c('A'), BRIDGE: 0x0148, XCHAIN_CLAIM_ID: c('Q'),
+      XCHAIN_CREATE_ACCOUNT_CLAIM_ID: c('K'), DID: 0x0149, ORACLE: 0x0152, MPTOKEN_ISSUANCE: c('~'),
+      MPTOKEN: c('t'), MANIFEST: c('M'), MANIFEST_DIR: 0x014d, CREDENTIAL: 0x0144,
+      PERMISSIONED_DOMAIN: c('m'), RANDOM: 0x526e,
+    },
+  };
+  const LT_COMMON = {
+    NFTOKEN_OFFER: 0x0037, CHECK: 0x0043, NEGATIVE_UNL: 0x004e, NFTOKEN_PAGE: 0x0050,
+    SIGNER_LIST: 0x0053, TICKET: 0x0054, ACCOUNT_ROOT: 0x0061, DIR_NODE: 0x0064, AMENDMENTS: 0x0066,
+    LEDGER_HASHES: 0x0068, BRIDGE: 0x0069, OFFER: 0x006f, DEPOSIT_PREAUTH: 0x0070,
+    XCHAIN_OWNED_CLAIM_ID: 0x0071, RIPPLE_STATE: 0x0072, FEE_SETTINGS: 0x0073,
+    XCHAIN_OWNED_CREATE_ACCOUNT_CLAIM_ID: 0x0074, ESCROW: 0x0075, PAYCHAN: 0x0078, AMM: 0x0079,
+    MPTOKEN_ISSUANCE: 0x007e, MPTOKEN: 0x007f, ORACLE: 0x0080, CREDENTIAL: 0x0081,
+    PERMISSIONED_DOMAIN: 0x0082,
+  };
+  const LT = {
+    xrpl: Object.assign({}, LT_COMMON, {
+      DID: 0x0049, DELEGATE: 0x0083, VAULT: 0x0084, LOAN_BROKER: 0x0088, LOAN: 0x0089,
+      SPONSORSHIP: 0x0090, TRANSACTION_PROPOSAL: 0x0091,
+    }),
+    xahau: Object.assign({}, LT_COMMON, {
+      CRON: 0x0041, HOOK_DEFINITION: 0x0044, EMITTED_TXN: 0x0045, HOOK: 0x0048, IMPORT_VLSEQ: 0x0049,
+      APP_LOADER: 0x004c, MANIFEST: 0x004d, UNL_REPORT: 0x0052, URI_TOKEN: 0x0055, HOOK_STATE: 0x0076,
+      DID: 0x008d, RANDOM: 0x526e,
+    }),
+  };
+
+  // ---------- result helpers ----------
+  // A segment is one labelled run of preimage bytes.
+  const seg = (label, bytes, role) => ({ label, bytes, role: role || label });
+  const nsSeg = (code) => seg('Namespace', u16(code), 'ns');
+  function hashed(ctx, nsKey, segs, extra) {
+    const all = [nsSeg(NS[ctx.chain][nsKey]), ...segs];
+    return Object.assign({ mode: 'hash', segments: all, key: sha512Half(concat(all.map((s) => s.bytes))) }, extra || {});
+  }
+
+  // ---------- composite helpers ----------
+  // Asset value from the UI: { cur, iss }. Returns {kind:'issue', currency, account} or {kind:'mpt', id}.
+  function parseAsset(v, chain, allowMpt) {
+    const cur = clean(v && v.cur);
+    const h = strip0x(cur);
+    if (h.length === 48 && isHex(h)) {
+      if (!allowMpt) throw { field: 'cur', message: chain === 'xahau' ? 'MPT assets aren’t supported here on Xahau' : 'MPT assets aren’t supported here' };
+      return { kind: 'mpt', id: unhex(h) };
+    }
+    let currency;
+    try { currency = P.currency(cur, chain); } catch (e) { throw { field: 'cur', message: e.message }; }
+    if (currency.every((b) => b === 0)) return { kind: 'issue', currency, account: zeros(20), xrp: true };
+    let account;
+    try { account = P.account(v && v.iss); } catch (e) { throw { field: 'iss', message: e.message === 'Required' ? 'Issuer required for non-native currencies' : e.message }; }
+    return { kind: 'issue', currency, account };
+  }
+  // std::weak_ordering for Asset: MPT < Issue; Issue by currency then (non-XRP) account; MPT by id.
+  function assetCmp(a, b) {
+    if (a.kind !== b.kind) return a.kind === 'mpt' ? -1 : 1;
+    if (a.kind === 'mpt') return cmp(a.id, b.id);
+    const cc = cmp(a.currency, b.currency);
+    if (cc) return cc;
+    if (a.xrp) return 0;
+    return cmp(a.account, b.account);
+  }
+
+  // ---------- field factories ----------
+  const F = {
+    account: (key, label, hint) => ({ key, type: 'account', label, hint }),
+    optAccount: (key, label, hint) => ({ key, type: 'account', label, hint, optional: true }),
+    u32: (key, label, hint) => ({ key, type: 'u32', label, hint }),
+    u64: (key, label, hint) => ({ key, type: 'u64', label, hint }),
+    u256: (key, label, hint) => ({ key, type: 'u256', label, hint }),
+    optU256: (key, label, hint) => ({ key, type: 'u256', label, hint, optional: true }),
+    seq: (key, label, hint) => ({ key, type: 'seq', label, hint }),
+    currency: (key, label, hint) => ({ key, type: 'currency', label, hint }),
+    asset: (key, label, hint) => ({ key, type: 'asset', label, hint }),
+    blob: (key, label, hint, mode) => ({ key, type: 'blob', label, hint, mode: mode || 'text' }),
+    pubkey: (key, label, hint) => ({ key, type: 'pubkey', label, hint }),
+    mptid: (key, label, hint) => ({ key, type: 'mptid', label, hint }),
+    mptOrKey: (key, label, hint) => ({ key, type: 'mptOrKey', label, hint }),
+    choice: (key, label, options, hint) => ({ key, type: 'choice', label, options, hint }),
+    creds: (key, label, hint) => ({ key, type: 'creds', label, hint }),
+  };
+
+  // Parse every field of a definition. Returns {values, errors}.
+  function parseFields(def, raw, ctx) {
+    const values = {}, errors = {};
+    for (const f of def.fields || []) {
+      const r = raw[f.key];
+      try {
+        switch (f.type) {
+          case 'account':
+            if (f.optional && !clean(r)) { values[f.key] = null; break; }
+            values[f.key] = P.account(r); break;
+          case 'u32': values[f.key] = P.u32(r); break;
+          case 'u64': values[f.key] = P.u64(r); break;
+          case 'u256':
+            if (f.optional && !clean(r)) { values[f.key] = null; break; }
+            values[f.key] = P.u256(r); break;
+          case 'seq': values[f.key] = ctx.chain === 'xahau' ? P.seq32or256(r) : P.u32(r); break;
+          case 'currency': values[f.key] = P.currency(r, ctx.chain); break;
+          case 'asset': values[f.key] = parseAsset(r, ctx.chain, ctx.chain === 'xrpl' && def.mptAssets); break;
+          case 'blob': values[f.key] = P.blob(r && r.text, (r && r.mode) || f.mode); break;
+          case 'pubkey': values[f.key] = P.pubkey(r); break;
+          case 'mptid': values[f.key] = P.mptid(r); break;
+          case 'mptOrKey': {
+            const h = strip0x(clean(r));
+            if (!h) throw new Error('Required');
+            if (isHex(h) && h.length === 48) values[f.key] = { mptid: unhex(h) };
+            else if (isHex(h) && h.length === 64) values[f.key] = { key: unhex(h) };
+            else throw new Error('Enter a 48-hex MPTokenIssuanceID or a 64-hex issuance ledger key');
+            break;
+          }
+          case 'choice': values[f.key] = r || f.options[0][0]; break;
+          case 'creds': {
+            const rows = (r || []).filter((x) => clean(x.iss) || (x.type && x.type.text));
+            if (!rows.length) throw { rows: {}, message: 'Add at least one credential' };
+            if (rows.length > 8) throw { rows: {}, message: 'At most 8 credentials' };
+            const rowErr = {}, out = [];
+            (r || []).forEach((x, i) => {
+              if (!(clean(x.iss) || (x.type && x.type.text))) return;
+              const e = {};
+              let iss, ty;
+              try { iss = P.account(x.iss); } catch (er) { e.iss = er.message; }
+              try { ty = P.blob(x.type && x.type.text, (x.type && x.type.mode) || 'text'); } catch (er) { e.type = er.message; }
+              if (e.iss || e.type) rowErr[i] = e; else out.push({ iss, ty });
+            });
+            if (Object.keys(rowErr).length) throw { rows: rowErr, message: '' };
+            values[f.key] = out; break;
+          }
+          default: throw new Error('Unknown field type ' + f.type);
+        }
+      } catch (e) {
+        errors[f.key] = e instanceof Error ? e.message : e;
+      }
+    }
+    return { values, errors };
+  }
+
+  // ---------- keylet definitions ----------
+  // fn: function signature shown in the UI. nsKey/ltKey resolve through the chain tables.
+  const singleton = (id, title, fn, nsKey, ltKey, chains, blurb) => ({
+    id, title, fn, nsKey, ltKey, chains, blurb, fields: [],
+    calc: (v, ctx) => hashed(ctx, nsKey, []),
+  });
+  const acctOnly = (id, title, fn, nsKey, ltKey, chains, label, blurb) => ({
+    id, title, fn, nsKey, ltKey, chains, blurb, fields: [F.account('account', label || 'Account')],
+    calc: (v, ctx) => hashed(ctx, nsKey, [seg('AccountID', v.account)]),
+  });
+  const acctSeq = (id, title, fn, nsKey, ltKey, chains, labels, blurb) => ({
+    id, title, fn, nsKey, ltKey, chains, blurb,
+    fields: [F.account('account', labels[0]), F.seq('seq', labels[1], 'xrplXahauSeq')],
+    calc: (v, ctx) => hashed(ctx, nsKey, [seg('AccountID', v.account), seg(v.seq.length === 32 ? 'uint256' : 'Sequence', v.seq, 'Sequence')]),
+  });
+  const acctU32 = (id, title, fn, nsKey, ltKey, chains, labels, blurb) => ({
+    id, title, fn, nsKey, ltKey, chains, blurb,
+    fields: [F.account('account', labels[0]), F.u32('seq', labels[1])],
+    calc: (v, ctx) => hashed(ctx, nsKey, [seg('AccountID', v.account), seg(labels[2] || 'Sequence', v.seq, 'Sequence')]),
+  });
+  const acctAcct = (id, title, fn, nsKey, ltKey, chains, labels, blurb) => ({
+    id, title, fn, nsKey, ltKey, chains, blurb,
+    fields: [F.account('account', labels[0]), F.account('account2', labels[1])],
+    calc: (v, ctx) => hashed(ctx, nsKey, [seg(labels[0], v.account, 'AccountID'), seg(labels[1], v.account2, 'AccountID2')]),
+  });
+  const B = ['xrpl', 'xahau'];
+  const X = ['xahau'];
+  const R = ['xrpl'];
+
+  const DEFS = [
+    // --- Ledger singletons
+    { group: 'Ledger singletons', items: [
+      singleton('amendments', 'Amendments', 'keylet::amendments()', 'AMENDMENTS', 'AMENDMENTS', B),
+      Object.assign(singleton('fees', 'Fee settings', 'keylet::feeSettings()', 'FEE_SETTINGS', 'FEE_SETTINGS', B), { fnXahau: 'keylet::fees()' }),
+      singleton('negative-unl', 'Negative UNL', 'keylet::negativeUNL()', 'NEGATIVE_UNL', 'NEGATIVE_UNL', B),
+      singleton('skip', 'Skip list (recent)', 'keylet::skip()', 'SKIP_LIST', 'LEDGER_HASHES', B, 'Hashes of the most recent 256 ledgers.'),
+      {
+        id: 'skip-ledger', title: 'Skip list (historical)', fn: 'keylet::skip(LedgerIndex)', nsKey: 'SKIP_LIST', ltKey: 'LEDGER_HASHES', chains: B,
+        blurb: 'Every 65,536 ledgers share one historical skip list, so the ledger index is shifted right by 16 before hashing.',
+        fields: [F.u32('ledger', 'Ledger index')],
+        calc: (v, ctx) => {
+          const n = new DataView(v.ledger.buffer).getUint32(0) >>> 16;
+          return hashed(ctx, 'SKIP_LIST', [seg('Ledger index ≫ 16', u32(n), 'Sequence')], { note: `${new DataView(v.ledger.buffer).getUint32(0)} ≫ 16 = ${n}` });
+        },
+      },
+      singleton('unl-report', 'UNL report', 'keylet::UNLReport()', 'UNL_REPORT', 'UNL_REPORT', X),
+      singleton('emitted-dir', 'Emitted transactions directory', 'keylet::emittedDir()', 'EMITTED_DIR', 'DIR_NODE', X),
+      singleton('manifest-dir', 'Manifest directory', 'keylet::manifestDir()', 'MANIFEST_DIR', 'DIR_NODE', X),
+      singleton('random', 'Random', 'keylet::random()', 'RANDOM', 'RANDOM', X),
+    ]},
+
+    // --- Accounts
+    { group: 'Accounts', items: [
+      acctOnly('account', 'Account root', 'keylet::account(AccountID)', 'ACCOUNT', 'ACCOUNT_ROOT', B),
+      acctOnly('owner-dir', 'Owner directory', 'keylet::ownerDir(AccountID)', 'OWNER_DIR', 'DIR_NODE', B, 'Owner', 'Root page of the account’s owner directory. Use “Directory page” for later pages.'),
+      {
+        id: 'signers', title: 'Signer list', fn: 'keylet::signerList(AccountID)', fnXahau: 'keylet::signers(AccountID)', nsKey: 'SIGNER_LIST', ltKey: 'SIGNER_LIST', chains: B,
+        fields: [F.account('account', 'Account')],
+        calc: (v, ctx) => hashed(ctx, 'SIGNER_LIST', [seg('AccountID', v.account), seg('SignerListID (0)', u32(0), 'Sequence')]),
+      },
+      {
+        id: 'ticket', title: 'Ticket', fn: 'keylet::ticket(AccountID, SeqProxy)', nsKey: 'TICKET', ltKey: 'TICKET', chains: B,
+        fields: [F.account('account', 'Account'), F.u32('seq', 'Ticket sequence')],
+        calc: (v, ctx) => hashed(ctx, 'TICKET', [seg('AccountID', v.account), seg('TicketSequence', v.seq, 'Sequence')]),
+      },
+      acctOnly('did', 'DID', 'keylet::did(AccountID)', 'DID', 'DID', B),
+      acctAcct('delegate', 'Delegate', 'keylet::delegate(AccountID, AccountID)', 'DELEGATE', 'DELEGATE', R, ['Account', 'Authorized account']),
+      acctAcct('sponsorship', 'Sponsorship', 'keylet::sponsorship(AccountID, AccountID)', 'SPONSORSHIP', 'SPONSORSHIP', R, ['Sponsor', 'Sponsee']),
+      Object.assign(acctU32('tx-proposal', 'Transaction proposal', 'keylet::txProposal(AccountID, uint32)', 'TRANSACTION_PROPOSAL', 'TRANSACTION_PROPOSAL', R, ['Target account', 'Ticket sequence', 'TicketSequence']), { tag: 'develop' }),
+      acctOnly('app-loader', 'App loader', 'keylet::appLoader(AccountID)', 'APP_LOADER', 'APP_LOADER', X),
+    ]},
+
+    // --- Hooks (Xahau)
+    { group: 'Hooks', items: [
+      acctOnly('hook', 'Hook', 'keylet::hook(AccountID)', 'HOOK', 'HOOK', X),
+      {
+        id: 'hook-definition', title: 'Hook definition', fn: 'keylet::hookDefinition(uint256)', nsKey: 'HOOK_DEFINITION', ltKey: 'HOOK_DEFINITION', chains: X,
+        fields: [F.u256('hash', 'HookHash', '64 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'HOOK_DEFINITION', [seg('HookHash', v.hash, 'uint256')]),
+      },
+      {
+        id: 'hook-state', title: 'Hook state', fn: 'keylet::hookState(AccountID, uint256 key, uint256 ns)', nsKey: 'HOOK_STATE', ltKey: 'HOOK_STATE', chains: X,
+        fields: [F.account('account', 'Account'), F.u256('stateKey', 'State key', '64 hex characters'), F.u256('hookNs', 'Hook namespace', '64 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'HOOK_STATE', [seg('AccountID', v.account), seg('Key', v.stateKey, 'uint256'), seg('Namespace', v.hookNs, 'uint256b')]),
+      },
+      {
+        id: 'hook-state-dir', title: 'Hook state directory', fn: 'keylet::hookStateDir(AccountID, uint256 ns)', nsKey: 'HOOK_STATE_DIR', ltKey: 'DIR_NODE', chains: X,
+        fields: [F.account('account', 'Account'), F.u256('hookNs', 'Hook namespace', '64 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'HOOK_STATE_DIR', [seg('AccountID', v.account), seg('Namespace', v.hookNs, 'uint256b')]),
+      },
+      {
+        id: 'emitted-txn', title: 'Emitted transaction', fn: 'keylet::emittedTxn(uint256)', nsKey: 'EMITTED_TXN', ltKey: 'EMITTED_TXN', chains: X,
+        fields: [F.u256('txid', 'Emitted transaction ID', '64 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'EMITTED_TXN', [seg('Transaction ID', v.txid, 'uint256')]),
+      },
+      {
+        id: 'cron', title: 'Cron', fn: 'keylet::cron(uint32 timestamp, optional<AccountID>)', nsKey: 'CRON', ltKey: 'CRON', chains: X,
+        blurb: 'Built directly, not hashed whole: 8 bytes of the cron namespace hash, the 4-byte timestamp, then 20 bytes of a per-account hash. Leave the account empty for the time-slot prefix.',
+        fields: [F.u32('timestamp', 'Timestamp (seconds)'), F.optAccount('cronAccount', 'Account', 'Optional')],
+        calc: (v, ctx) => {
+          const nsCode = NS[ctx.chain].CRON;
+          const nsHash = sha512Half(u16(nsCode));
+          let tail, tailSeg;
+          if (v.cronAccount) {
+            const pre = concat([u16(nsCode), v.timestamp, v.cronAccount]);
+            tail = sha512Half(pre).slice(0, 20);
+            tailSeg = seg('SHA512Half(ns, ts, AccountID)[0..20]', tail, 'AccountID');
+          } else {
+            tail = zeros(20);
+            tailSeg = seg('Zero (no account)', tail, 'pad');
+          }
+          const segments = [seg('SHA512Half(ns)[0..8]', nsHash.slice(0, 8), 'ns'), seg('Timestamp', v.timestamp, 'Sequence'), tailSeg];
+          return { mode: 'compose', segments, key: concat(segments.map((s) => s.bytes)) };
+        },
+      },
+    ]},
+
+    // --- Payments
+    { group: 'Payments', items: [
+      acctSeq('check', 'Check', 'keylet::check(AccountID, seq)', 'CHECK', 'CHECK', B, ['Account', 'Sequence']),
+      acctSeq('escrow', 'Escrow', 'keylet::escrow(AccountID, seq)', 'ESCROW', 'ESCROW', B, ['Owner', 'Sequence']),
+      {
+        id: 'pay-chan', title: 'Payment channel', fn: 'keylet::payChannel(AccountID src, AccountID dst, seq)', fnXahau: 'keylet::payChan(AccountID src, AccountID dst, seq)', nsKey: 'PAYMENT_CHANNEL', ltKey: 'PAYCHAN', chains: B,
+        fields: [F.account('account', 'Source'), F.account('account2', 'Destination'), F.seq('seq', 'Sequence', 'xrplXahauSeq')],
+        calc: (v, ctx) => hashed(ctx, 'PAYMENT_CHANNEL', [seg('Source', v.account, 'AccountID'), seg('Destination', v.account2, 'AccountID2'), seg(v.seq.length === 32 ? 'uint256' : 'Sequence', v.seq, 'Sequence')]),
+      },
+      acctAcct('deposit-preauth', 'Deposit preauthorization', 'keylet::depositPreauth(AccountID owner, AccountID authorized)', 'DEPOSIT_PREAUTH', 'DEPOSIT_PREAUTH', B, ['Owner', 'Authorized account']),
+      {
+        id: 'deposit-preauth-creds', title: 'Deposit preauth (credentials)', fn: 'keylet::depositPreauth(AccountID owner, set<pair<AccountID, Slice>>)', nsKey: 'DEPOSIT_PREAUTH_CREDENTIALS', ltKey: 'DEPOSIT_PREAUTH', chains: B,
+        blurb: 'Each credential is hashed as SHA512Half(issuer, type). Credentials are sorted by issuer, then type, and the count is appended as a 64-bit integer.',
+        fields: [F.account('account', 'Owner'), F.creds('creds', 'Authorized credentials')],
+        calc: (v, ctx) => {
+          const sorted = v.creds.slice().sort((a, b) => cmp(a.iss, b.iss) || cmp(a.ty, b.ty));
+          // std::set dedupes identical pairs
+          const uniq = sorted.filter((x, i) => i === 0 || cmp(x.iss, sorted[i - 1].iss) || cmp(x.ty, sorted[i - 1].ty));
+          const segs = [seg('Owner', v.account, 'AccountID')];
+          uniq.forEach((x, i) => segs.push(seg(`SHA512Half(issuer, type) #${i + 1}`, sha512Half(concat([x.iss, x.ty])), 'uint256')));
+          segs.push(seg('Count (size_t)', u64(uniq.length), 'Sequence'));
+          return hashed(ctx, 'DEPOSIT_PREAUTH_CREDENTIALS', segs);
+        },
+      },
+    ]},
+
+    // --- DEX
+    { group: 'DEX and trust lines', items: [
+      acctSeq('offer', 'Offer', 'keylet::offer(AccountID, seq)', 'OFFER', 'OFFER', B, ['Account', 'Sequence']),
+      {
+        id: 'trust-line', title: 'Trust line', fn: 'keylet::trustLine(AccountID, AccountID, Currency)', fnXahau: 'keylet::line(AccountID, AccountID, Currency)', nsKey: 'TRUST_LINE', ltKey: 'RIPPLE_STATE', chains: B,
+        blurb: 'The two accounts are hashed lowest first, so the order you enter them in doesn’t matter.',
+        fields: [F.account('account', 'Account A'), F.account('account2', 'Account B'), F.currency('currency', 'Currency', 'USD, a longer code, or 40 hex')],
+        calc: (v, ctx) => {
+          const [lo, hi] = cmp(v.account, v.account2) <= 0 ? [v.account, v.account2] : [v.account2, v.account];
+          return hashed(ctx, 'TRUST_LINE', [seg('Low account', lo, 'AccountID'), seg('High account', hi, 'AccountID2'), seg('Currency', v.currency)]);
+        },
+      },
+      {
+        id: 'book', title: 'Order book directory', fn: 'keylet::book(Book)', nsKey: 'BOOK_DIR', ltKey: 'DIR_NODE', chains: B, mptAssets: true,
+        blurb: 'The book base: the hash with its last 8 bytes (the quality) set to zero.',
+        fieldsFor: (chain) => chain === 'xrpl'
+          ? [F.asset('in', 'Taker pays', 'currency or MPT'), F.asset('out', 'Taker gets', 'currency or MPT'), F.optU256('domain', 'Permissioned domain', 'Optional, 64 hex')]
+          : [F.asset('in', 'Taker pays'), F.asset('out', 'Taker gets')],
+        calc: (v, ctx) => {
+          const a = v.in, b = v.out;
+          const T = (n) => seg(`Tag 0x0${n}`, new Uint8Array([n]), 'pad');
+          let segs;
+          if (a.kind === 'issue' && b.kind === 'issue') segs = [seg('Pays currency', a.currency, 'Currency'), seg('Gets currency', b.currency, 'Currency2'), seg('Pays issuer', a.account, 'AccountID'), seg('Gets issuer', b.account, 'AccountID2')];
+          else if (a.kind === 'issue') segs = [T(1), seg('Pays currency', a.currency, 'Currency'), seg('Gets MPTID', b.id, 'mpt'), seg('Pays issuer', a.account, 'AccountID')];
+          else if (b.kind === 'issue') segs = [T(2), seg('Pays MPTID', a.id, 'mpt'), seg('Gets currency', b.currency, 'Currency'), seg('Gets issuer', b.account, 'AccountID')];
+          else segs = [T(3), seg('Pays MPTID', a.id, 'mpt'), seg('Gets MPTID', b.id, 'mpt2')];
+          if (v.domain) segs.push(seg('DomainID', v.domain, 'uint256'));
+          const r = hashed(ctx, 'BOOK_DIR', segs);
+          r.rawHash = r.key;
+          r.key = concat([r.key.slice(0, 24), zeros(8)]);
+          r.note = 'Last 8 bytes zeroed (quality 0)';
+          return r;
+        },
+      },
+      {
+        id: 'quality', title: 'Book quality page', fn: 'keylet::quality(Keylet, uint64)', nsKey: null, ltKey: 'DIR_NODE', chains: B,
+        blurb: 'Replaces the last 8 bytes of a book directory key with the quality, big-endian. No hashing.',
+        fields: [F.u256('dirKey', 'Book directory key', '64 hex characters'), F.u64('q', 'Quality', 'uint64, decimal or 0x hex')],
+        calc: (v) => {
+          const segments = [seg('Book base (first 24 bytes)', v.dirKey.slice(0, 24), 'uint256'), seg('Quality', v.q, 'Sequence')];
+          return { mode: 'compose', segments, key: concat(segments.map((s) => s.bytes)) };
+        },
+      },
+      {
+        id: 'amm', title: 'AMM', fn: 'keylet::amm(Asset, Asset)', nsKey: 'AMM', ltKey: 'AMM', chains: B, mptAssets: true,
+        blurb: 'Assets are sorted before hashing (MPTs before currencies; currencies by code, then issuer), so either order works.',
+        fields: [F.asset('in', 'Asset 1'), F.asset('out', 'Asset 2')],
+        calc: (v, ctx) => {
+          const [a, b] = assetCmp(v.in, v.out) <= 0 ? [v.in, v.out] : [v.out, v.in];
+          let segs;
+          if (a.kind === 'issue' && b.kind === 'issue') segs = [seg('Low issuer', a.account, 'AccountID'), seg('Low currency', a.currency, 'Currency'), seg('High issuer', b.account, 'AccountID2'), seg('High currency', b.currency, 'Currency2')];
+          else if (a.kind === 'issue') segs = [seg('Issuer', a.account, 'AccountID'), seg('Currency', a.currency, 'Currency'), seg('MPTID', b.id, 'mpt')];
+          else if (b.kind === 'issue') segs = [seg('MPTID', a.id, 'mpt'), seg('Issuer', b.account, 'AccountID'), seg('Currency', b.currency, 'Currency')];
+          else segs = [seg('Low MPTID', a.id, 'mpt'), seg('High MPTID', b.id, 'mpt2')];
+          return hashed(ctx, 'AMM', segs);
+        },
+      },
+    ]},
+
+    // --- Directories
+    { group: 'Directories', items: [
+      {
+        id: 'page', title: 'Directory page', fn: 'keylet::page(uint256 root, uint64 index)', nsKey: 'DIR_NODE', ltKey: 'DIR_NODE', chains: B,
+        blurb: 'Page 0 is the root key itself; later pages are hashed from the root and the page index.',
+        fields: [F.u256('root', 'Root directory key', '64 hex characters'), F.u64('index', 'Page index')],
+        calc: (v, ctx) => {
+          if (v.index.every((b) => b === 0)) return { mode: 'compose', segments: [seg('Root key (page 0)', v.root, 'uint256')], key: v.root, note: 'Page 0 returns the root key unchanged' };
+          return hashed(ctx, 'DIR_NODE', [seg('Root key', v.root, 'uint256'), seg('Page index', v.index, 'Sequence')]);
+        },
+      },
+    ]},
+
+    // --- NFTs
+    { group: 'NFTs', items: [
+      {
+        id: 'nft-page-min', title: 'NFT page (min)', fn: 'keylet::nftokenPageMin(AccountID)', fnXahau: 'keylet::nftpage_min(AccountID)', nsKey: null, ltKey: 'NFTOKEN_PAGE', chains: B,
+        fields: [F.account('account', 'Owner')],
+        calc: (v) => { const s = [seg('AccountID', v.account), seg('Zero', zeros(12), 'pad')]; return { mode: 'compose', segments: s, key: concat(s.map((x) => x.bytes)) }; },
+      },
+      {
+        id: 'nft-page-max', title: 'NFT page (max)', fn: 'keylet::nftokenPageMax(AccountID)', fnXahau: 'keylet::nftpage_max(AccountID)', nsKey: null, ltKey: 'NFTOKEN_PAGE', chains: B,
+        fields: [F.account('account', 'Owner')],
+        calc: (v) => { const s = [seg('AccountID', v.account), seg('Page mask (all FF)', new Uint8Array(12).fill(255), 'pad')]; return { mode: 'compose', segments: s, key: concat(s.map((x) => x.bytes)) }; },
+      },
+      {
+        id: 'nft-page', title: 'NFT page (for token)', fn: 'keylet::nftokenPage(Keylet, uint256 token)', fnXahau: 'keylet::nftpage(Keylet, uint256 token)', nsKey: null, ltKey: 'NFTOKEN_PAGE', chains: B,
+        blurb: 'The owner’s AccountID followed by the low 12 bytes of the NFTokenID.',
+        fields: [F.account('account', 'Owner'), F.u256('token', 'NFTokenID', '64 hex characters')],
+        calc: (v) => { const s = [seg('AccountID', v.account), seg('NFTokenID (low 12 bytes)', v.token.slice(20), 'uint256')]; return { mode: 'compose', segments: s, key: concat(s.map((x) => x.bytes)) }; },
+      },
+      acctSeq('nft-offer', 'NFT offer', 'keylet::nftokenOffer(AccountID, seq)', 'NFTOKEN_OFFER', 'NFTOKEN_OFFER', B, ['Owner', 'Sequence']),
+      {
+        id: 'nft-buys', title: 'NFT buy offers directory', fn: 'keylet::nftBuys(uint256 NFTokenID)', fnXahau: 'keylet::nft_buys(uint256 NFTokenID)', nsKey: 'NFTOKEN_BUY_OFFERS', ltKey: 'DIR_NODE', chains: B,
+        fields: [F.u256('token', 'NFTokenID', '64 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'NFTOKEN_BUY_OFFERS', [seg('NFTokenID', v.token, 'uint256')]),
+      },
+      {
+        id: 'nft-sells', title: 'NFT sell offers directory', fn: 'keylet::nftSells(uint256 NFTokenID)', fnXahau: 'keylet::nft_sells(uint256 NFTokenID)', nsKey: 'NFTOKEN_SELL_OFFERS', ltKey: 'DIR_NODE', chains: B,
+        fields: [F.u256('token', 'NFTokenID', '64 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'NFTOKEN_SELL_OFFERS', [seg('NFTokenID', v.token, 'uint256')]),
+      },
+    ]},
+
+    // --- URI tokens
+    { group: 'URI tokens', items: [
+      {
+        id: 'uri-token', title: 'URI token', fn: 'keylet::uritoken(AccountID issuer, Blob uri)', nsKey: 'URI_TOKEN', ltKey: 'URI_TOKEN', chains: X,
+        fields: [F.account('account', 'Issuer'), F.blob('uri', 'URI', 'Text is encoded as UTF-8', 'text')],
+        calc: (v, ctx) => hashed(ctx, 'URI_TOKEN', [seg('Issuer', v.account, 'AccountID'), seg(`URI (${v.uri.length} bytes)`, v.uri, 'blob')]),
+      },
+    ]},
+
+    // --- MPT
+    { group: 'Multi-purpose tokens', items: [
+      {
+        id: 'mpt-issuance', title: 'MPT issuance (sequence + issuer)', fn: 'keylet::mptIssuance(makeMptID(seq, issuer))', nsKey: 'MPTOKEN_ISSUANCE', ltKey: 'MPTOKEN_ISSUANCE', chains: B,
+        blurb: 'The MPTokenIssuanceID is the 4-byte sequence followed by the issuer’s AccountID.',
+        fields: [F.u32('seq', 'Sequence'), F.account('account', 'Issuer')],
+        calc: (v, ctx) => {
+          const id = concat([v.seq, v.account]);
+          return hashed(ctx, 'MPTOKEN_ISSUANCE', [seg('MPTID: sequence', v.seq, 'Sequence'), seg('MPTID: issuer', v.account, 'AccountID')], { note: 'MPTokenIssuanceID ' + hex(id) });
+        },
+      },
+      {
+        id: 'mpt-issuance-id', title: 'MPT issuance (by ID)', fn: 'keylet::mptIssuance(MPTID)', fnXrpl: 'keylet::mptokenIssuance(MPTID)', nsKey: 'MPTOKEN_ISSUANCE', ltKey: 'MPTOKEN_ISSUANCE', chains: B,
+        fields: [F.mptid('mptid', 'MPTokenIssuanceID', '48 hex characters')],
+        calc: (v, ctx) => hashed(ctx, 'MPTOKEN_ISSUANCE', [seg('MPTokenIssuanceID', v.mptid, 'mpt')]),
+      },
+      {
+        id: 'mptoken', title: 'MPToken (holder)', fn: 'keylet::mptoken(uint256 issuanceKey, AccountID holder)', nsKey: 'MPTOKEN', ltKey: 'MPTOKEN', chains: B,
+        blurb: 'An MPTokenIssuanceID is first turned into the issuance ledger key.',
+        fields: [F.mptOrKey('mpt', 'Issuance', '48-hex MPTokenIssuanceID or 64-hex issuance key'), F.account('account', 'Holder')],
+        calc: (v, ctx) => {
+          const ikey = v.mpt.key || sha512Half(concat([u16(NS[ctx.chain].MPTOKEN_ISSUANCE), v.mpt.mptid]));
+          return hashed(ctx, 'MPTOKEN', [seg('Issuance key', ikey, 'uint256'), seg('Holder', v.account, 'AccountID')], v.mpt.key ? null : { note: 'Issuance key derived from the MPTokenIssuanceID' });
+        },
+      },
+    ]},
+
+    // --- Credentials & compliance
+    { group: 'Credentials and domains', items: [
+      {
+        id: 'credential', title: 'Credential', fn: 'keylet::credential(AccountID subject, AccountID issuer, Slice type)', nsKey: 'CREDENTIAL', ltKey: 'CREDENTIAL', chains: B,
+        fields: [F.account('account', 'Subject'), F.account('account2', 'Issuer'), F.blob('credType', 'Credential type', 'The raw CredentialType bytes', 'text')],
+        calc: (v, ctx) => hashed(ctx, 'CREDENTIAL', [seg('Subject', v.account, 'AccountID'), seg('Issuer', v.account2, 'AccountID2'), seg(`CredentialType (${v.credType.length} bytes)`, v.credType, 'blob')]),
+      },
+      acctSeq('permissioned-domain', 'Permissioned domain', 'keylet::permissionedDomain(AccountID, seq)', 'PERMISSIONED_DOMAIN', 'PERMISSIONED_DOMAIN', B, ['Owner', 'Sequence']),
+      acctU32('oracle', 'Price oracle', 'keylet::oracle(AccountID, uint32 documentID)', 'ORACLE', 'ORACLE', B, ['Owner', 'OracleDocumentID', 'OracleDocumentID']),
+    ]},
+
+    // --- Lending
+    { group: 'Vaults and lending', items: [
+      acctU32('vault', 'Vault', 'keylet::vault(AccountID, SeqProxy)', 'VAULT', 'VAULT', R, ['Owner', 'Sequence']),
+      acctU32('loan-broker', 'Loan broker', 'keylet::loanBroker(AccountID, SeqProxy)', 'LOAN_BROKER', 'LOAN_BROKER', R, ['Owner', 'Sequence']),
+      {
+        id: 'loan', title: 'Loan', fn: 'keylet::loan(uint256 loanBrokerID, SeqProxy loanSeq)', nsKey: 'LOAN', ltKey: 'LOAN', chains: R,
+        fields: [F.u256('broker', 'LoanBrokerID', '64 hex characters'), F.u32('seq', 'Loan sequence')],
+        calc: (v, ctx) => hashed(ctx, 'LOAN', [seg('LoanBrokerID', v.broker, 'uint256'), seg('LoanSequence', v.seq, 'Sequence')]),
+      },
+    ]},
+
+    // --- Validators (Xahau)
+    { group: 'Validators', items: [
+      {
+        id: 'import-vlseq', title: 'Import VL sequence', fn: 'keylet::import_vlseq(PublicKey)', nsKey: 'IMPORT_VLSEQ', ltKey: 'IMPORT_VLSEQ', chains: X,
+        fields: [F.pubkey('pubkey', 'Validator list publisher key', '66 hex characters or n… key')],
+        calc: (v, ctx) => hashed(ctx, 'IMPORT_VLSEQ', [seg('Public key', v.pubkey, 'blob')]),
+      },
+      {
+        id: 'manifest', title: 'Manifest', fn: 'keylet::manifest(PublicKey)', nsKey: 'MANIFEST', ltKey: 'MANIFEST', chains: X,
+        fields: [F.pubkey('pubkey', 'Master public key', '66 hex characters or n… key')],
+        calc: (v, ctx) => hashed(ctx, 'MANIFEST', [seg('Public key', v.pubkey, 'blob')]),
+      },
+    ]},
+
+    // --- Cross-chain bridges
+    { group: 'Cross-chain bridges', items: [
+      {
+        id: 'bridge', title: 'Bridge', fn: 'keylet::bridge(STXChainBridge, ChainType)', nsKey: 'BRIDGE', ltKey: 'BRIDGE', chains: B, tagXrpl: 'removed',
+        blurb: 'Hashes the door account and currency of the chain this Bridge object lives on (locking or issuing).',
+        fields: [F.account('door', 'Door account'), F.currency('currency', 'Bridge currency', 'Currency on this chain, e.g. XRP')],
+        calc: (v, ctx) => hashed(ctx, 'BRIDGE', [seg('Door account', v.door, 'AccountID'), seg('Currency', v.currency)]),
+      },
+      ...[['xchain-claim-id', 'XChain claim ID', 'xChainClaimID', 'XCHAIN_CLAIM_ID', 'XCHAIN_OWNED_CLAIM_ID'],
+          ['xchain-create-account-claim-id', 'XChain create-account claim ID', 'xChainCreateAccountClaimID', 'XCHAIN_CREATE_ACCOUNT_CLAIM_ID', 'XCHAIN_OWNED_CREATE_ACCOUNT_CLAIM_ID']]
+        .map(([id, title, fnName, nsKey, ltKey]) => ({
+          id, title, fn: `keylet::${fnName}(STXChainBridge, uint64 seq)`, nsKey, ltKey, chains: B, tagXrpl: 'removed',
+          fields: [
+            F.account('lockDoor', 'Locking chain door'), F.asset('lockIssue', 'Locking chain issue'),
+            F.account('issDoor', 'Issuing chain door'), F.asset('issIssue', 'Issuing chain issue'),
+            F.u64('claimSeq', id === 'xchain-claim-id' ? 'XChainClaimID' : 'XChainAccountCreateCount'),
+          ],
+          calc: (v, ctx) => hashed(ctx, nsKey, [
+            seg('Locking door', v.lockDoor, 'AccountID'), seg('Locking currency', v.lockIssue.currency, 'Currency'), seg('Locking issuer', v.lockIssue.account, 'AccountID2'),
+            seg('Issuing door', v.issDoor, 'AccountID'), seg('Issuing currency', v.issIssue.currency, 'Currency'), seg('Issuing issuer', v.issIssue.account, 'AccountID2'),
+            seg('Sequence (uint64)', v.claimSeq, 'Sequence'),
+          ]),
+        })),
+    ]},
+  ];
+
+  const LT_NAMES = {};
+  for (const k of Object.keys(LT.xrpl)) LT_NAMES[k] = 'lt' + k;
+  for (const k of Object.keys(LT.xahau)) LT_NAMES[k] = 'lt' + k;
+
+  function fieldsOf(def, chain) { return def.fieldsFor ? def.fieldsFor(chain) : def.fields; }
+
+  function compute(def, raw, chain) {
+    const ctx = { chain };
+    const d = Object.assign({}, def, { fields: fieldsOf(def, chain) });
+    const { values, errors } = parseFields(d, raw, ctx);
+    if (Object.keys(errors).length) return { errors };
+    const r = d.calc(values, ctx);
+    r.lt = LT[chain][def.ltKey];
+    r.ltName = 'lt' + def.ltKey;
+    r.nsCode = def.nsKey ? NS[chain][def.nsKey] : null;
+    r.preimage = concat(r.segments.map((s) => s.bytes));
+    return r;
+  }
+
+  return { DEFS, NS, LT, compute, fieldsOf, hex, unhex, sha512, sha512Half, sha256, P, u16, u32, u64, concat };
+})();
+if (typeof module !== 'undefined') module.exports = KL;
+
+</script>
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const h = (tag, attrs, ...kids) => {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : String(k));
+    return el;
+  };
+
+  const put = (el, ...kids) => { for (const k of kids.flat()) if (k != null && k !== false) el.append(k); };
+  const ALL = KL.DEFS.flatMap((g) => g.items.map((d) => Object.assign({ group: g.group }, d)));
+  const byId = (id) => ALL.find((d) => d.id === id);
+  const defsFor = (chain) => ALL.filter((d) => d.chains.includes(chain));
+
+  // ---- state (remembered per viewer; never required) ----
+  const S = { chain: 'xrpl', id: 'amendments', values: {}, q: '' };
+  try {
+    const saved = JSON.parse(localStorage.getItem('keylet-tools') || 'null');
+    if (saved && typeof saved === 'object') {
+      if (saved.chain === 'xrpl' || saved.chain === 'xahau') S.chain = saved.chain;
+      if (saved.id && byId(saved.id)) S.id = saved.id;
+      if (saved.values && typeof saved.values === 'object') S.values = saved.values;
+    }
+  } catch (e) { /* storage unavailable */ }
+  let saveTimer;
+  const save = () => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem('keylet-tools', JSON.stringify({ chain: S.chain, id: S.id, values: S.values })); } catch (e) { /* ignore */ }
+    }, 250);
+  };
+
+  // ---- routing: #xrpl-account, #xahau-hook-state ----
+  function readHash() {
+    const m = /^#(xrpl|xahau)-([a-z0-9-]+)$/.exec(location.hash);
+    if (!m) return false;
+    const d = byId(m[2]);
+    if (!d || !d.chains.includes(m[1])) return false;
+    S.chain = m[1]; S.id = m[2];
+    return true;
+  }
+  function writeHash() {
+    const want = '#' + S.chain + '-' + S.id;
+    if (location.hash !== want) { try { history.replaceState(null, '', want); } catch (e) { /* ignore */ } }
+  }
+
+  // ---- labels ----
+  const hex4 = (n) => '0x' + n.toString(16).toUpperCase().padStart(4, '0');
+  function nsLabel(code) {
+    if (code == null) return '';
+    if (code < 0x100 && code >= 0x20 && code < 0x7f) return '‘' + String.fromCharCode(code) + '’';
+    return hex4(code);
+  }
+  const fnOf = (d) => (S.chain === 'xahau' ? d.fnXahau : d.fnXrpl) || d.fn;
+  function tagOf(d) {
+    if (d.tag === 'develop') return { text: 'rippled develop only', title: 'Defined in rippled develop; not in release 3.4.1' };
+    if (S.chain === 'xrpl' && d.tagXrpl === 'removed') return { text: 'Removed in rippled develop', title: 'Present through rippled 3.4.1; removed from develop' };
+    return null;
+  }
+  function placeholder(f) {
+    const nat = S.chain === 'xahau' ? 'XAH' : 'XRP';
+    switch (f.type) {
+      case 'account': return f.optional ? 'Optional r… address' : 'r… address or 40 hex';
+      case 'u32': return 'uint32';
+      case 'u64': return f.hint || 'uint64';
+      case 'u256': return f.optional ? 'Optional, 64 hex characters' : '64 hex characters';
+      case 'seq': return S.chain === 'xahau' ? 'uint32 sequence, or 64-hex uint256' : 'uint32 sequence';
+      case 'currency': return `USD, ${nat}, a longer code, or 40 hex`;
+      case 'pubkey': return '66 hex characters or n… key';
+      case 'mptid': return '48 hex characters';
+      case 'mptOrKey': return '48-hex MPTokenIssuanceID or 64-hex key';
+      default: return '';
+    }
+  }
+
+  // ---- list ----
+  function renderList() {
+    const nav = $('#list');
+    nav.textContent = '';
+    const q = S.q.trim().toLowerCase();
+    const groups = new Map();
+    for (const d of defsFor(S.chain)) {
+      const hay = (d.title + ' ' + d.id + ' ' + fnOf(d) + ' ' + d.group).toLowerCase();
+      if (q && !hay.includes(q)) continue;
+      if (!groups.has(d.group)) groups.set(d.group, []);
+      groups.get(d.group).push(d);
+    }
+    if (!groups.size) { nav.append(h('p', { class: 'empty-list' }, 'No keylets match “' + S.q.trim() + '”.')); return; }
+    for (const [g, items] of groups) {
+      nav.append(h('h3', {}, g));
+      nav.append(h('ul', {}, items.map((d) => h('li', {},
+        h('button', { type: 'button', 'aria-current': d.id === S.id ? 'true' : 'false', onclick: () => select(d.id) },
+          h('span', {}, d.title),
+          h('span', { class: 'ns', title: 'Namespace' }, d.nsKey ? nsLabel(KL.NS[S.chain][d.nsKey]) : '')
+        )))));
+    }
+  }
+
+  // ---- form ----
+  const val = (key, fallback) => (S.values[key] !== undefined ? S.values[key] : fallback);
+  const setVal = (key, v) => { S.values[key] = v; save(); update(); };
+  const textAttrs = { autocomplete: 'off', spellcheck: 'false', autocapitalize: 'off', autocorrect: 'off' };
+
+  function modeToggle(current, onPick, label) {
+    return h('div', { class: 'seg-toggle', role: 'group', 'aria-label': label },
+      ['text', 'hex'].map((m) => h('button', {
+        type: 'button', 'aria-pressed': current === m ? 'true' : 'false',
+        onclick: (e) => { onPick(m); e.currentTarget.parentNode.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', b === e.currentTarget ? 'true' : 'false')); },
+      }, m === 'text' ? 'Text' : 'Hex')));
+  }
+
+  function fieldEl(f) {
+    const id = 'f-' + f.key;
+    const label = (forId) => h('label', { for: forId }, f.label, f.optional ? h('span', { class: 'opt' }, ' (optional)') : null);
+    if (f.type === 'asset') {
+      const v = val(f.key, { cur: '', iss: '' });
+      const cur = h('input', Object.assign({ class: 'inp', id: id + '-cur', value: v.cur || '', placeholder: S.chain === 'xahau' ? 'Currency (USD, XAH, 40 hex)' : 'Currency (USD, XRP) or 48-hex MPT ID', 'aria-label': f.label + ' currency' }, textAttrs));
+      const iss = h('input', Object.assign({ class: 'inp', id: id + '-iss', value: v.iss || '', placeholder: 'Issuer r… address', 'aria-label': f.label + ' issuer' }, textAttrs));
+      const sync = () => {
+        const nv = { cur: cur.value, iss: iss.value };
+        const c = cur.value.trim().toUpperCase();
+        iss.disabled = c === 'XRP' || (S.chain === 'xahau' && c === 'XAH') || /^(0X)?[0-9A-F]{48}$/.test(c);
+        setVal(f.key, nv);
+      };
+      cur.addEventListener('input', sync); iss.addEventListener('input', sync);
+      const c0 = (v.cur || '').trim().toUpperCase();
+      iss.disabled = c0 === 'XRP' || (S.chain === 'xahau' && c0 === 'XAH') || /^(0X)?[0-9A-F]{48}$/.test(c0);
+      return h('div', { class: 'field' }, label(id + '-cur'), h('div', { class: 'pair' }, cur, iss),
+        h('p', { class: 'err', id: 'err-' + f.key }));
+    }
+    if (f.type === 'blob') {
+      const v = val(f.key, { text: '', mode: f.mode || 'text' });
+      const inp = h('input', Object.assign({ class: 'inp', id, value: v.text || '', placeholder: v.mode === 'hex' ? 'Hex bytes' : 'Text (UTF-8)' }, textAttrs));
+      const cur = () => val(f.key, { text: '', mode: f.mode || 'text' });
+      inp.addEventListener('input', () => setVal(f.key, { text: inp.value, mode: cur().mode }));
+      const tog = modeToggle(v.mode || 'text', (m) => { inp.placeholder = m === 'hex' ? 'Hex bytes' : 'Text (UTF-8)'; setVal(f.key, { text: inp.value, mode: m }); }, f.label + ' encoding');
+      return h('div', { class: 'field' }, label(id), h('div', { class: 'blobrow' }, inp, tog),
+        f.hint ? h('p', { class: 'note' }, f.hint) : null, h('p', { class: 'err', id: 'err-' + f.key }));
+    }
+    if (f.type === 'creds') {
+      const rows = val(f.key, [{ iss: '', type: { text: '', mode: 'text' } }]);
+      const box = h('div', {});
+      rows.forEach((r, i) => {
+        const iss = h('input', Object.assign({ class: 'inp', value: r.iss || '', placeholder: 'Issuer r… address', 'aria-label': `Credential ${i + 1} issuer`, 'data-cred': i + '-iss' }, textAttrs));
+        const ty = h('input', Object.assign({ class: 'inp', value: (r.type && r.type.text) || '', placeholder: 'Credential type', 'aria-label': `Credential ${i + 1} type`, 'data-cred': i + '-type' }, textAttrs));
+        const write = (patch) => { const all = val(f.key, []).slice(); all[i] = Object.assign({}, all[i], patch); setVal(f.key, all); };
+        iss.addEventListener('input', () => write({ iss: iss.value }));
+        ty.addEventListener('input', () => write({ type: { text: ty.value, mode: (val(f.key, [])[i].type || {}).mode || 'text' } }));
+        const tog = modeToggle((r.type && r.type.mode) || 'text', (m) => write({ type: { text: ty.value, mode: m } }), `Credential ${i + 1} type encoding`);
+        const rm = h('button', { type: 'button', class: 'linkish', 'aria-label': `Remove credential ${i + 1}`, disabled: rows.length === 1 ? true : null, onclick: () => {
+          const all = val(f.key, []).slice(); all.splice(i, 1); S.values[f.key] = all; save(); renderForm(); update();
+        } }, 'Remove');
+        put(box, h('div', { class: 'cred' }, iss, ty, tog, rm), h('p', { class: 'err', id: `err-${f.key}-${i}` }));
+      });
+      const add = h('button', { type: 'button', class: 'linkish', disabled: rows.length >= 8 ? true : null, onclick: () => {
+        const all = val(f.key, []).slice(); all.push({ iss: '', type: { text: '', mode: 'text' } }); S.values[f.key] = all; save(); renderForm(); update();
+      } }, 'Add credential');
+      return h('div', { class: 'field' }, h('span', { class: 'lbl' }, f.label), box, add, h('p', { class: 'err', id: 'err-' + f.key }));
+    }
+    const inp = h('input', Object.assign({ class: 'inp', id, value: val(f.key, ''), placeholder: placeholder(f), inputmode: (f.type === 'u32' || f.type === 'u64') ? 'numeric' : null }, textAttrs));
+    inp.addEventListener('input', () => setVal(f.key, inp.value));
+    return h('div', { class: 'field' }, label(id), inp, h('p', { class: 'err', id: 'err-' + f.key }));
+  }
+
+  function renderForm() {
+    const d = byId(S.id);
+    const p = $('#form-panel');
+    const focusedId = document.activeElement && document.activeElement.id;
+    p.textContent = '';
+    const tag = tagOf(d);
+    put(p, 
+      h('div', { class: 'title-row' }, h('h2', {}, d.title), tag ? h('span', { class: 'tag', title: tag.title }, tag.text) : null),
+      h('p', { class: 'sig' }, h('code', {}, fnOf(d))),
+      d.blurb ? h('p', { class: 'blurb' }, d.blurb) : null,
+    );
+    const fields = KL.fieldsOf(d, S.chain);
+    if (fields.length) put(p, h('form', { onsubmit: (e) => e.preventDefault(), autocomplete: 'off' }, fields.map(fieldEl)));
+    else put(p, h('p', { class: 'blurb' }, 'This is a fixed object; its key never changes.'));
+    if (focusedId && document.getElementById(focusedId)) document.getElementById(focusedId).focus();
+  }
+
+  // ---- errors ----
+  function isEmptyRaw(f, raw) {
+    if (f.type === 'asset') return !raw || (!String(raw.cur || '').trim() && !String(raw.iss || '').trim());
+    if (f.type === 'blob') return !raw || !raw.text;
+    if (f.type === 'creds') return !raw || !raw.some((r) => String(r.iss || '').trim() || (r.type && r.type.text));
+    return !String(raw == null ? '' : raw).trim();
+  }
+  function paintErrors(d, errors) {
+    document.querySelectorAll('#form-panel .err').forEach((e) => { e.textContent = ''; });
+    document.querySelectorAll('#form-panel .inp').forEach((e) => e.removeAttribute('aria-invalid'));
+    const missing = [];
+    let invalid = 0;
+    for (const f of KL.fieldsOf(d, S.chain)) {
+      const e = errors[f.key];
+      if (!e) continue;
+      const raw = S.values[f.key];
+      if (isEmptyRaw(f, raw)) { if (!f.optional) missing.push(f.label); continue; }
+      if (f.type === 'asset') {
+        if (e.field === 'iss' && !String((raw && raw.iss) || '').trim()) { missing.push(f.label + ' issuer'); continue; }
+        if (e.field === 'cur' && !String((raw && raw.cur) || '').trim()) { missing.push(f.label + ' currency'); continue; }
+        const inp = document.getElementById('f-' + f.key + '-' + e.field);
+        if (inp) inp.setAttribute('aria-invalid', 'true');
+        $('#err-' + f.key).textContent = e.message; invalid++; continue;
+      }
+      if (f.type === 'creds') {
+        for (const [i, re] of Object.entries(e.rows || {})) {
+          const row = (raw || [])[i] || {};
+          const msgs = [];
+          if (re.iss) { if (String(row.iss || '').trim()) { msgs.push('Issuer: ' + re.iss); $(`[data-cred="${i}-iss"]`).setAttribute('aria-invalid', 'true'); } else missing.push(`Credential ${+i + 1} issuer`); }
+          if (re.type) { if (row.type && row.type.text) { msgs.push('Type: ' + re.type); $(`[data-cred="${i}-type"]`).setAttribute('aria-invalid', 'true'); } else missing.push(`Credential ${+i + 1} type`); }
+          if (msgs.length) { $(`#err-${f.key}-${i}`).textContent = msgs.join(' '); invalid++; }
+        }
+        if (e.message) { $('#err-' + f.key).textContent = e.message; invalid++; }
+        continue;
+      }
+      const msg = typeof e === 'string' ? e : e.message;
+      const inp = document.getElementById('f-' + f.key);
+      if (inp) inp.setAttribute('aria-invalid', 'true');
+      const el = $('#err-' + f.key);
+      if (el) el.textContent = msg;
+      invalid++;
+    }
+    return { missing, invalid };
+  }
+
+  // ---- result ----
+  function copyBtn(getText, label) {
+    return h('button', { type: 'button', class: 'copy', 'aria-label': label || 'Copy', onclick: async (e) => {
+      const b = e.currentTarget, t = getText();
+      let ok = false;
+      try { await navigator.clipboard.writeText(t); ok = true; } catch (err) {
+        const ta = h('textarea', { style: 'position:fixed;opacity:0' }); ta.value = t; document.body.append(ta); ta.select();
+        try { ok = document.execCommand('copy'); } catch (e2) { ok = false; } ta.remove();
+      }
+      b.textContent = ok ? 'Copied' : 'Select and copy';
+      b.classList.toggle('done', ok);
+      setTimeout(() => { b.textContent = 'Copy'; b.classList.remove('done'); }, 1400);
+    } }, 'Copy');
+  }
+  function keySpans(r) {
+    const out = [];
+    if (r.mode === 'compose') {
+      // colour each byte run by the segment it came from, chunked into 8-character groups
+      const chars = [];
+      for (const s of r.segments) for (const ch of KL.hex(s.bytes)) chars.push([ch, s.role]);
+      for (let i = 0; i < chars.length; i += 8) {
+        const chunk = h('span', { class: 'k' });
+        let run = null, role = null;
+        for (const [ch, ro] of chars.slice(i, i + 8)) {
+          if (ro !== role) { run = h('span', { class: 'c', 'data-role': ro }); chunk.append(run); role = ro; }
+          run.append(ch);
+        }
+        out.push(chunk);
+      }
+      return out;
+    }
+    const hx = KL.hex(r.key);
+    for (let i = 0; i < hx.length; i += 8) out.push(h('span', { class: 'k' }, hx.slice(i, i + 8)));
+    return out;
+  }
+  const cArray = (bytes) => '{' + Array.from(bytes, (b) => '0x' + b.toString(16).toUpperCase().padStart(2, '0') + 'U').join(',') + '}';
+
+  function update() {
+    const d = byId(S.id);
+    const box = $('#result');
+    const raw = {};
+    for (const f of KL.fieldsOf(d, S.chain)) raw[f.key] = S.values[f.key];
+    let r;
+    try { r = KL.compute(d, raw, S.chain); } catch (e) { r = { errors: {}, crash: e.message }; }
+    box.textContent = '';
+    if (r.errors) {
+      const { missing, invalid } = paintErrors(d, r.errors);
+      put(box, h('h3', {}, 'Key'));
+      if (r.crash) put(box, h('p', { class: 'status' }, 'Couldn’t compute this keylet: ' + r.crash));
+      else if (invalid) put(box, h('p', { class: 'status' }, 'Fix the highlighted ' + (invalid === 1 ? 'field' : 'fields') + ' to compute the key.'));
+      else put(box, h('p', { class: 'status' }, 'Waiting for ' + missing.join(', ') + '.'));
+      return;
+    }
+    paintErrors(d, {});
+    const keyHex = KL.hex(r.key);
+    const typeKey = KL.concat([KL.u16(r.lt), r.key]);
+    put(box, 
+      h('h3', {}, 'Key'),
+      h('div', { class: 'keyline' }, h('div', { class: 'key', 'aria-label': keyHex }, keySpans(r)), copyBtn(() => keyHex, 'Copy key')),
+      r.note ? h('p', { class: 'note' }, r.note) : null,
+    );
+    const facts = h('dl', { class: 'facts' });
+    const row = (dt, ddText, copyText) => facts.append(h('dt', {}, dt), h('dd', {}, ddText), copyText != null ? copyBtn(() => copyText, 'Copy ' + dt) : h('span', {}));
+    row('Ledger entry type', `${r.ltName} (${hex4(r.lt)})`);
+    if (r.nsCode != null) row('Namespace', `${nsLabel(r.nsCode)} (${hex4(r.nsCode)})`);
+    row('Type and key', hex4(r.lt).slice(2) + ' : ' + keyHex, hex4(r.lt).slice(2) + keyHex);
+    row('C array (34 bytes)', cArray(typeKey), cArray(typeKey));
+    if (r.rawHash) row('Hash before zeroing', KL.hex(r.rawHash), KL.hex(r.rawHash));
+    put(box, facts);
+
+    const preHex = KL.hex(r.preimage);
+    put(box, 
+      h('div', { class: 'pre-head' },
+        h('h3', { style: 'margin:0' }, r.mode === 'hash' ? 'Preimage' : 'Composition'),
+        h('div', { style: 'display:flex;gap:10px;align-items:baseline' },
+          h('p', {}, r.preimage.length + ' bytes'), copyBtn(() => preHex, 'Copy preimage hex'))),
+      h('div', { class: 'band' }, r.segments.map((s) => h('div', { class: 'seg', 'data-role': s.role, title: s.label },
+        h('span', { class: 'sl' }, s.label, ' ', h('small', {}, s.bytes.length + 'B')),
+        h('span', { class: 'sh' }, KL.hex(s.bytes) || '(empty)')))),
+      h('p', { class: 'arrow' }, r.mode === 'hash'
+        ? 'The key is the first 32 bytes of SHA-512 over these bytes, in order.'
+        : 'These bytes are the key itself; nothing is hashed at this step.'),
+    );
+  }
+
+  // ---- chain & selection ----
+  function paintChain() {
+    document.body.classList.toggle('xahau', S.chain === 'xahau');
+    document.querySelectorAll('.chain button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.chain === S.chain ? 'true' : 'false'));
+  }
+  function select(id) {
+    S.id = id; save(); writeHash();
+    renderList(); renderForm(); update();
+    if (matchMedia('(max-width: 820px)').matches) $('#form-panel').scrollIntoView({ block: 'start' });
+  }
+  function setChain(chain) {
+    S.chain = chain;
+    if (!byId(S.id).chains.includes(chain)) S.id = 'amendments';
+    save(); writeHash(); paintChain(); renderList(); renderForm(); update();
+  }
+  document.querySelectorAll('.chain button').forEach((b) => b.addEventListener('click', () => setChain(b.dataset.chain)));
+  $('#search').addEventListener('input', (e) => { S.q = e.target.value; renderList(); });
+  window.addEventListener('hashchange', () => { if (readHash()) { save(); paintChain(); renderList(); renderForm(); update(); } });
+
+  readHash();
+  if (!byId(S.id).chains.includes(S.chain)) S.id = 'amendments';
+  writeHash(); paintChain(); renderList(); renderForm(); update();
+})();
+</script>
+</body>
+</html>
